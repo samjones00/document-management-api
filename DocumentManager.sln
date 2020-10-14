@@ -3,13 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30503.244
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocumentManager.Common", "DocumentManager.Common\DocumentManager.Common.csproj", "{01F24695-7A38-429B-8A81-BC88647D29D5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocumentManager.Common", "DocumentManager.Common\DocumentManager.Common.csproj", "{01F24695-7A38-429B-8A81-BC88647D29D5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocumentManager.Api", "DocumentManager.Api\DocumentManager.Api.csproj", "{34B72C03-C16B-46B0-8C35-8F59CA2501A7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocumentManager.Api", "DocumentManager.Api\DocumentManager.Api.csproj", "{34B72C03-C16B-46B0-8C35-8F59CA2501A7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocumentManager.Api.Tests", "DocumentManager.Api.Tests\DocumentManager.Api.Tests.csproj", "{0A181767-B7EE-472E-B4EC-0A56A247B42A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocumentManager.Api.Tests", "DocumentManager.Api.Tests\DocumentManager.Api.Tests.csproj", "{0A181767-B7EE-472E-B4EC-0A56A247B42A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocumentManager.Common.Tests", "DocumentManager.Common.Tests\DocumentManager.Common.Tests.csproj", "{BF488511-C0E6-4D9E-8548-9E1159BB40BD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocumentManager.Common.Tests", "DocumentManager.Common.Tests\DocumentManager.Common.Tests.csproj", "{BF488511-C0E6-4D9E-8548-9E1159BB40BD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration Tests", "Integration Tests", "{F1A0D359-A84D-406D-BA79-AF7F59A0F624}"
+	ProjectSection(SolutionItems) = preProject
+		IntegrationTests\postman_collection.json = IntegrationTests\postman_collection.json
+		IntegrationTests\postman_environment.json = IntegrationTests\postman_environment.json
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

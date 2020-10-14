@@ -25,6 +25,58 @@ namespace DocumentManager.Api
             _uploadItemFactory = uploadItemFactory;
         }
 
+        [FunctionName(nameof(Upload))]
+        public async Task<IActionResult> Upload(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest httpRequest,
+            [Blob(Constants.Storage.ContainerName, Connection = Constants.Storage.ConnectionStringName)] CloudBlobContainer outputContainer,
+            ILogger log)
+        {
+            log.LogInformation("Uploading file...");
+            var sw = Stopwatch.StartNew();
+            await outputContainer.CreateIfNotExistsAsync();
+
+            var requestBody = await new StreamReader(httpRequest.Body).ReadToEndAsync();
+
+            var uploadRequest = JsonConvert.DeserializeObject<UploadRequest>(requestBody);
+            var filename = uploadRequest.Filename;
+
+            var cloudBlockBlob = outputContainer.GetBlockBlobReference(filename);
+            var byteArray = Convert.FromBase64String(uploadRequest.Data);
+
+            await cloudBlockBlob.UploadFromStreamAsync(new MemoryStream(byteArray));
+
+            log.LogInformation($"Upload complete in {sw.ElapsedMilliseconds}ms - {filename}");
+
+            return new CreatedResult("/", new
+            {
+                Filename = filename,
+                Size = byteArray.Length
+            });
+        }
+
+        [FunctionName("Function1")]
+        public static void Run([QueueTrigger("upload-queue", Connection = "")] string myQueueItem, ILogger log)
+        {
+            log.LogInformation($"C# Queue trigger function processed: {myQueueItem}");
+        }
+
+        [FunctionName(nameof(CreateRecord))]
+        public async Task CreateRecord([BlobTrigger("uploads/{name}", Connection = "")]
+            Stream stream, string name,
+            [CosmosDB(
+                databaseName: Constants.Cosmos.DatabaseName,
+                collectionName:  Constants.Cosmos.ContainerName,
+                ConnectionStringSetting = Constants.Cosmos.ConnectionStringName)]
+            IAsyncCollector<object> uploadItems,
+            ILogger log)
+        {
+            var uploadItem = _uploadItemFactory.Create(name, stream.Length);
+
+            await uploadItems.AddAsync(uploadItem);
+
+            log.LogInformation($"C# Blob trigger function Processed blob\n Name:{name} \n Size: {stream.Length} Bytes");
+        }
+
         [FunctionName(nameof(List))]
         public async Task<IActionResult> List(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get")]
@@ -59,50 +111,9 @@ namespace DocumentManager.Api
             var cloudBlockBlob = outputContainer.GetBlockBlobReference(filename);
 
 
-             await cloudBlockBlob.DeleteIfExistsAsync();
+            await cloudBlockBlob.DeleteIfExistsAsync();
 
             return new OkResult();
-        }
-
-        [FunctionName(nameof(Upload))]
-        public async Task<IActionResult> Upload(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest httpRequest,
-            [Blob(Constants.Storage.ContainerName, Connection = Constants.Storage.ConnectionStringName)] CloudBlobContainer outputContainer,
-            ILogger log)
-        {
-            log.LogInformation("Uploading file...");
-            var sw = Stopwatch.StartNew();
-            await outputContainer.CreateIfNotExistsAsync();
-
-            var requestBody = await new StreamReader(httpRequest.Body).ReadToEndAsync();
-
-            var uploadRequest = JsonConvert.DeserializeObject<UploadRequest>(requestBody);
-            var filename = uploadRequest.Filename;
-
-            var cloudBlockBlob = outputContainer.GetBlockBlobReference(filename);
-            var bytes = Convert.FromBase64String(uploadRequest.Data);
-
-            await cloudBlockBlob.UploadFromStreamAsync(new MemoryStream(bytes));
-
-            log.LogInformation($"Upload complete in {sw.ElapsedMilliseconds}ms - {filename}");
-            return new CreatedResult("/", filename);
-        }
-
-        [FunctionName(nameof(CreateRecord))]
-        public async Task CreateRecord([BlobTrigger("uploads/{name}", Connection = "")]
-            Stream stream, string name,
-            [CosmosDB(
-                databaseName: Constants.Cosmos.DatabaseName,
-                collectionName:  Constants.Cosmos.ContainerName,
-                ConnectionStringSetting = Constants.Cosmos.ConnectionStringName)]
-            IAsyncCollector<object> uploadItems,
-            ILogger log)
-        {
-            var uploadItem = _uploadItemFactory.Create(name, stream.Length);
-
-            await uploadItems.AddAsync(uploadItem);
-
-            log.LogInformation($"C# Blob trigger function Processed blob\n Name:{name} \n Size: {stream.Length} Bytes");
         }
     }
 }
