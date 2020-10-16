@@ -26,8 +26,8 @@ namespace DocumentManager.Common.Tests
             result.Bytes.ShouldBe(2048);
             result.Filename.ShouldBe(filename);
             result.ContentType.ShouldBe("application/pdf");
-            result.id.ShouldBeOfType<Guid>();
-            result.id.ShouldNotBe(string.Empty);
+            result.Id.ShouldBeOfType<Guid>();
+            result.Id.ShouldNotBe(string.Empty);
             result.DateCreated.ShouldBe(dateCreated);
         }
 
@@ -48,8 +48,8 @@ namespace DocumentManager.Common.Tests
             result.Bytes.ShouldBe(2048);
             result.Filename.ShouldBe(filename);
             result.ContentType.ShouldBe("application/pdf");
-            result.id.ShouldBeOfType<Guid>();
-            result.id.ShouldNotBe(string.Empty);
+            result.Id.ShouldBeOfType<Guid>();
+            result.Id.ShouldNotBe(string.Empty);
             result.DateCreated.ShouldBe(dateCreated);
         }
     }

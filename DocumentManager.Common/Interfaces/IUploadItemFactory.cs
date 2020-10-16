@@ -4,6 +4,6 @@ namespace DocumentManager.Common.Interfaces
 {
     public interface IUploadItemFactory
     {
-        UploadItem Create(string filename, long length);
+        Document Create(string filename, long length);
     }
 }

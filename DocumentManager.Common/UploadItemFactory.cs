@@ -14,7 +14,7 @@ namespace DocumentManager.Common
             _dateTimeProvider = dateTimeProvider;
         }
 
-        public UploadItem Create(string filename, long bytes)
+        public Document Create(string filename, long bytes)
         {
             var provider = new FileExtensionContentTypeProvider();
 
@@ -23,7 +23,7 @@ namespace DocumentManager.Common
                 contentType = "application/octet-stream";
             }
 
-            return new UploadItem(filename, bytes, contentType, _dateTimeProvider.UtcNow());
+            return new Document(filename, bytes, contentType, _dateTimeProvider.UtcNow());
         }
     }
 }

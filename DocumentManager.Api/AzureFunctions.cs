@@ -1,12 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using DocumentManager.Common;
 using DocumentManager.Common.Commands;
-using DocumentManager.Common.Interfaces;
 using DocumentManager.Common.Models;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -14,32 +11,28 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Azure.Documents.Client;
-using Microsoft.Extensions.Configuration;
-using Microsoft.WindowsAzure.Storage.Blob;
 using Newtonsoft.Json;
-using Microsoft.Azure.Cosmos;
-using Microsoft.WindowsAzure.Storage;
 
 namespace DocumentManager.Api
 {
     public class AzureFunctions
     {
-        private readonly IUploadItemFactory _uploadItemFactory;
-        private readonly CosmosClient _cosmosClient;
-        private readonly CloudBlobClient _cloudBlobClient;
+        //private readonly IUploadItemFactory _uploadItemFactory;
+        //private readonly CosmosClient _cosmosClient;
+        //private readonly CloudBlobClient _cloudBlobClient;
         private readonly IMediator _mediator;
 
-        public AzureFunctions(IUploadItemFactory uploadItemFactory, IConfiguration configuration)
+        //public AzureFunctions(IUploadItemFactory uploadItemFactory, IConfiguration configuration)
+        public AzureFunctions()
         {
-            _uploadItemFactory = uploadItemFactory;
-            var cosmosConnectionString = configuration.GetConnectionString(Constants.Cosmos.ConnectionStringName);
-            _cosmosClient = new CosmosClient(cosmosConnectionString);
+            //_uploadItemFactory = uploadItemFactory;
+            //var cosmosConnectionString = configuration.GetConnectionString(Constants.Cosmos.ConnectionStringName);
+            //_cosmosClient = new CosmosClient(cosmosConnectionString);
 
-            var storageConnectionString = configuration.GetConnectionString(Constants.Storage.ConnectionStringName);
-            
-            CloudStorageAccount.TryParse(storageConnectionString, out var storageAccount);
-            _cloudBlobClient = storageAccount.CreateCloudBlobClient();
+            //var storageConnectionString = configuration.GetConnectionString(Constants.Storage.ConnectionStringName);
+
+            //CloudStorageAccount.TryParse(storageConnectionString, out var storageAccount);
+            //_cloudBlobClient = storageAccount.CreateCloudBlobClient();
         }
 
         [FunctionName(nameof(Upload))]
@@ -58,15 +51,15 @@ namespace DocumentManager.Api
 
             log.LogInformation($"Uploading {filename}...");
 
-            await _mediator.Send(new UploadDocumentCommand(filename, byteArray));
+            await _mediator.Send(new UploadFileCommand(filename, byteArray));
+
+            log.LogInformation($"Upload of {filename} completed in {sw.ElapsedMilliseconds}ms.");
 
             return new CreatedResult("/", new
             {
                 Filename = filename,
                 Size = byteArray.Length
             });
-
-            log.LogInformation($"Upload complete in {sw.ElapsedMilliseconds}ms - {filename}");
         }
 
         [FunctionName(nameof(CreateRecord))]
@@ -74,30 +67,35 @@ namespace DocumentManager.Api
             Stream stream, string name,
             ILogger log)
         {
-            var uploadItem = _uploadItemFactory.Create(name, stream.Length);
+            //var uploadItem = _uploadItemFactory.Create(name, stream.Length);
 
-            var container = _cosmosClient.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
-            await container.CreateItemAsync(uploadItem);
+            //var container = _cosmosClient.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
+            //await container.CreateItemAsync(uploadItem);
+
+            await _mediator.Send(new CreateDocumentCommand(name, stream.Length));
 
             log.LogInformation($"C# Blob trigger function Processed blob\n Name:{name} \n Size: {stream.Length} Bytes");
         }
 
         [FunctionName(nameof(List))]
         public async Task<IActionResult> List(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get")]
-            HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequest req,
             ILogger log)
         {
-            var container = _cosmosClient.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
+            var documents = await _mediator.Send(new ListDocumentsQuery());
 
-            var list = container.GetItemLinqQueryable<UploadItem>(true);
+            //var container = _cosmosClient.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
 
-            if (list == null)
+            //var list = container.GetItemLinqQueryable<UploadItem>(true);
+
+            if (documents == null || !documents.Any())
             {
                 return new NotFoundResult();
             }
 
-            return new OkObjectResult(list);
+            log.LogInformation($"{documents.Count()} documents found.");
+
+            return new OkObjectResult(documents);
         }
 
         [FunctionName(nameof(Delete))]
@@ -107,27 +105,31 @@ namespace DocumentManager.Api
             string filename,
             ILogger log)
         {
-            var uri = UriFactory.CreateDocumentUri(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName,
-                filename);
-
             log.LogInformation("C# HTTP trigger function processed a request.");
+            //var uri = UriFactory.CreateDocumentUri(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName,
+            //    filename);
 
-            var blobContainer = _cloudBlobClient.GetContainerReference(Constants.Storage.ContainerName);
 
-            var blob = blobContainer.GetBlockBlobReference(filename);
+            //var blobContainer = _cloudBlobClient.GetContainerReference(Constants.Storage.ContainerName);
 
-            await blob.DeleteAsync();
+            //var blob = blobContainer.GetBlockBlobReference(filename);
 
-            var container = _cosmosClient.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
-            QueryDefinition queryDefinition = new QueryDefinition("select * from c");
-            var queryResultSetIterator = container.GetItemQueryIterator<UploadItem>(queryDefinition);
+            //await blob.DeleteAsync();
 
-            Microsoft.Azure.Cosmos.FeedResponse<UploadItem> currentResultSet =
-                await queryResultSetIterator.ReadNextAsync();
+            await _mediator.Send(new DeleteFileCommand(filename));
 
-            var doc = currentResultSet.FirstOrDefault(x => x.Filename == filename);
+            await _mediator.Send(new DeleteDocumentCommand(filename));
 
-            await container.DeleteItemAsync<UploadItem>(doc.id, new PartitionKey(doc.ContentType));
+            //var container = _cosmosClient.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
+            //QueryDefinition queryDefinition = new QueryDefinition("select * from c");
+            //var queryResultSetIterator = container.GetItemQueryIterator<UploadItem>(queryDefinition);
+
+            //Microsoft.Azure.Cosmos.FeedResponse<UploadItem> currentResultSet =
+            //    await queryResultSetIterator.ReadNextAsync();
+
+            //var doc = currentResultSet.FirstOrDefault(x => x.Filename == filename);
+
+            //await container.DeleteItemAsync<UploadItem>(doc.id, new PartitionKey(doc.ContentType));
 
             return new OkResult();
         }

@@ -7,7 +7,7 @@ using DocumentManager.Common.Models;
 
 namespace DocumentManager.Common.Validators
 {
-    public class Validator : AbstractValidator<UploadItem>
+    public class Validator : AbstractValidator<Document>
     {
         public Validator()
         {
