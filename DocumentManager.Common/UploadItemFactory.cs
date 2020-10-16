@@ -1,7 +1,6 @@
-﻿using DocumentManager.Common.Interfaces;
+﻿using DocumentManager.Common.Extensions;
+using DocumentManager.Common.Interfaces;
 using DocumentManager.Common.Models;
-using DocumentManager.Common.Providers;
-using Microsoft.AspNetCore.StaticFiles;
 
 namespace DocumentManager.Common
 {
@@ -16,14 +15,7 @@ namespace DocumentManager.Common
 
         public Document Create(string filename, long bytes)
         {
-            var provider = new FileExtensionContentTypeProvider();
-
-            if (!provider.TryGetContentType(filename, out var contentType))
-            {
-                contentType = "application/octet-stream";
-            }
-
-            return new Document(filename, bytes, contentType, _dateTimeProvider.UtcNow());
+            return new Document(filename, bytes, filename.GetContentType(), _dateTimeProvider.UtcNow());
         }
     }
 }

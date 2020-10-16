@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
+using DocumentManager.Common.Validators;
 
 namespace DocumentManager.Api
 {
@@ -23,8 +24,9 @@ namespace DocumentManager.Api
         private readonly IMediator _mediator;
 
         //public AzureFunctions(IUploadItemFactory uploadItemFactory, IConfiguration configuration)
-        public AzureFunctions()
+        public AzureFunctions(IMediator mediator)
         {
+            _mediator = mediator;
             //_uploadItemFactory = uploadItemFactory;
             //var cosmosConnectionString = configuration.GetConnectionString(Constants.Cosmos.ConnectionStringName);
             //_cosmosClient = new CosmosClient(cosmosConnectionString);
@@ -44,12 +46,25 @@ namespace DocumentManager.Api
             var sw = new Stopwatch();
             sw.Start();
 
-            var uploadRequest =
-                JsonConvert.DeserializeObject<UploadRequest>(await new StreamReader(httpRequest.Body).ReadToEndAsync());
+            var uploadRequest = JsonConvert.DeserializeObject<UploadRequest>(await new StreamReader(httpRequest.Body).ReadToEndAsync());
             var filename = uploadRequest.Filename;
             var byteArray = Convert.FromBase64String(uploadRequest.Data);
 
-            log.LogInformation($"Uploading {filename}...");
+            uploadRequest.Bytes = byteArray;
+
+            var validator = new UploadRequestValidator();
+
+            var validationResult = validator.Validate(uploadRequest);
+
+            if (!validationResult.IsValid)
+            {
+                return new BadRequestObjectResult(validationResult.Errors.Select(e => new {
+                    Field = e.PropertyName,
+                    Error = e.ErrorMessage
+                }));
+            }
+
+            log.LogInformation($"Uploading {filename} to blob storage...");
 
             await _mediator.Send(new UploadFileCommand(filename, byteArray));
 

@@ -1,23 +1,22 @@
 ﻿using FluentValidation;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using DocumentManager.Common.Models;
+using DocumentManager.Common.Extensions;
 
 namespace DocumentManager.Common.Validators
 {
-    public class Validator : AbstractValidator<Document>
+    public class UploadRequestValidator : AbstractValidator<UploadRequest>
     {
-        public Validator()
+        public UploadRequestValidator()
         {
             RuleFor(x => x.Filename).NotEmpty().WithMessage("Yu must provide a filename");
-            RuleFor(x => x.Bytes).NotEqual(0).WithMessage("You most supply a file");
-            RuleFor(x => x.Bytes).Must(BeAValidFileSize).WithMessage("The file must be an allowed size");
-            RuleFor(x => x.ContentType).Must(BeAValidContentType).WithMessage("You must provide an allowed content type");
+            RuleFor(x => x.Bytes.Length).NotEqual(0).WithMessage("You most supply a file");
+            RuleFor(x => x.Bytes.Length).Must(BeAValidFileSize).WithMessage("The file must be an allowed size");
+            RuleFor(x => x.Filename.GetContentType()).Must(BeAValidContentType).WithMessage("You must provide an allowed content type");
         }
 
-        private bool BeAValidFileSize(long bytes)
+        private bool BeAValidFileSize(int bytes)
         {
             var maxSize = 5000;
 

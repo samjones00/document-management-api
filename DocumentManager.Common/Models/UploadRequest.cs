@@ -4,5 +4,6 @@
     {
         public string Filename { get; set; }
         public string Data { get; set; }
+        public byte[] Bytes { get; set; }
     }
 }
