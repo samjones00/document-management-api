@@ -1,7 +1,9 @@
-﻿using DocumentManager.Api;
+﻿using System.Reflection;
+using DocumentManager.Api;
 using DocumentManager.Common;
 using DocumentManager.Common.Interfaces;
 using DocumentManager.Common.Providers;
+using MediatR;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,7 +21,7 @@ namespace DocumentManager.Api
             //builder.Services.AddSingleton<IMyService>((s) => {
             //    return new MyService();
             //});
-
+            builder.Services.AddMediatR(typeof(DocumentManager.Common.Constants).GetTypeInfo().Assembly);
             builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
             builder.Services.AddSingleton<IUploadItemFactory, UploadItemFactory>();
         }

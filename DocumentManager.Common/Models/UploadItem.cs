@@ -12,7 +12,7 @@ namespace DocumentManager.Common.Models
             DateCreated = dateCreated;
         }
 
-        public Guid Id { get; } = Guid.NewGuid();
+        public string id { get; } = Guid.NewGuid().ToString();
         public string Filename { get; }
         public DateTime DateCreated { get; }
         public long Bytes { get; }

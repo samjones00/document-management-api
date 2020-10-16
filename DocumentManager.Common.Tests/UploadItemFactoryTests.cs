@@ -1,8 +1,6 @@
 using System;
 using DocumentManager.Common.Interfaces;
-using DocumentManager.Common.Providers;
 using Moq;
-using Newtonsoft.Json.Converters;
 using Shouldly;
 using Xunit;
 
@@ -28,8 +26,8 @@ namespace DocumentManager.Common.Tests
             result.Bytes.ShouldBe(2048);
             result.Filename.ShouldBe(filename);
             result.ContentType.ShouldBe("application/pdf");
-            result.Id.ShouldBeOfType<Guid>();
-            result.Id.ShouldNotBe(Guid.Empty);
+            result.id.ShouldBeOfType<Guid>();
+            result.id.ShouldNotBe(string.Empty);
             result.DateCreated.ShouldBe(dateCreated);
         }
 
@@ -50,8 +48,8 @@ namespace DocumentManager.Common.Tests
             result.Bytes.ShouldBe(2048);
             result.Filename.ShouldBe(filename);
             result.ContentType.ShouldBe("application/pdf");
-            result.Id.ShouldBeOfType<Guid>();
-            result.Id.ShouldNotBe(Guid.Empty);
+            result.id.ShouldBeOfType<Guid>();
+            result.id.ShouldNotBe(string.Empty);
             result.DateCreated.ShouldBe(dateCreated);
         }
     }

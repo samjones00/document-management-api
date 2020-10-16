@@ -2,7 +2,7 @@
 {
     public static class Constants
     {
-        public const string BlobStorageContainer = "Uploads";
+        //public const string BlobStorageContainer = "Uploads";
 
         public static class Storage
         {
