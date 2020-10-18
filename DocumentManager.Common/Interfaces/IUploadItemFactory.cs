@@ -1,6 +1,6 @@
-﻿using DocumentManager.Common.Models;
+﻿using DocumentManager.Core.Models;
 
-namespace DocumentManager.Common.Interfaces
+namespace DocumentManager.Core.Interfaces
 {
     public interface IUploadItemFactory
     {

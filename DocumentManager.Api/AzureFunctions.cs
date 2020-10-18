@@ -1,40 +1,33 @@
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using DocumentManager.Common.Commands;
-using DocumentManager.Common.Models;
+using System.Web.Http;
+using DocumentManager.Core.Commands;
+using DocumentManager.Core.Models;
+using DocumentManager.Core.Queries;
+using FluentValidation;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
-using Microsoft.Extensions.Logging;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using DocumentManager.Common.Validators;
 
 namespace DocumentManager.Api
 {
     public class AzureFunctions
     {
-        //private readonly IUploadItemFactory _uploadItemFactory;
-        //private readonly CosmosClient _cosmosClient;
-        //private readonly CloudBlobClient _cloudBlobClient;
         private readonly IMediator _mediator;
+        private readonly IValidator<UploadRequest> _validator;
 
-        //public AzureFunctions(IUploadItemFactory uploadItemFactory, IConfiguration configuration)
-        public AzureFunctions(IMediator mediator)
+        public AzureFunctions(IMediator mediator, IValidator<UploadRequest> validator)
         {
             _mediator = mediator;
-            //_uploadItemFactory = uploadItemFactory;
-            //var cosmosConnectionString = configuration.GetConnectionString(Constants.Cosmos.ConnectionStringName);
-            //_cosmosClient = new CosmosClient(cosmosConnectionString);
-
-            //var storageConnectionString = configuration.GetConnectionString(Constants.Storage.ConnectionStringName);
-
-            //CloudStorageAccount.TryParse(storageConnectionString, out var storageAccount);
-            //_cloudBlobClient = storageAccount.CreateCloudBlobClient();
+            _validator = validator;
         }
 
         [FunctionName(nameof(Upload))]
@@ -43,32 +36,33 @@ namespace DocumentManager.Api
             HttpRequest httpRequest,
             ILogger log)
         {
-            var sw = new Stopwatch();
-            sw.Start();
+            var uploadRequest = JsonConvert.DeserializeObject<UploadRequest>(await new StreamReader(httpRequest.Body)
+                .ReadToEndAsync());
 
-            var uploadRequest = JsonConvert.DeserializeObject<UploadRequest>(await new StreamReader(httpRequest.Body).ReadToEndAsync());
             var filename = uploadRequest.Filename;
             var byteArray = Convert.FromBase64String(uploadRequest.Data);
 
+            if (await UploadExists(filename))
+            {
+                return new BadRequestObjectResult("File already exists.");
+            }
+
             uploadRequest.Bytes = byteArray;
 
-            var validator = new UploadRequestValidator();
-
-            var validationResult = validator.Validate(uploadRequest);
+            var validationResult = _validator.Validate(uploadRequest);
 
             if (!validationResult.IsValid)
-            {
-                return new BadRequestObjectResult(validationResult.Errors.Select(e => new {
+                return new BadRequestObjectResult(validationResult.Errors.Select(e => new
+                {
                     Field = e.PropertyName,
                     Error = e.ErrorMessage
                 }));
-            }
 
             log.LogInformation($"Uploading {filename} to blob storage...");
 
-            await _mediator.Send(new UploadFileCommand(filename, byteArray));
+            await _mediator.Send(new UploadBlobCommand(filename, byteArray));
 
-            log.LogInformation($"Upload of {filename} completed in {sw.ElapsedMilliseconds}ms.");
+            log.LogInformation($"Upload of {filename} completed.");
 
             return new CreatedResult("/", new
             {
@@ -78,75 +72,80 @@ namespace DocumentManager.Api
         }
 
         [FunctionName(nameof(CreateRecord))]
-        public async Task CreateRecord([BlobTrigger("uploads/{name}", Connection = "")]
-            Stream stream, string name,
+        public async Task CreateRecord([BlobTrigger("uploads/{filename}", Connection = "")]
+            Stream stream, string filename,
             ILogger log)
         {
-            //var uploadItem = _uploadItemFactory.Create(name, stream.Length);
+            await _mediator.Send(new CreateDocumentCommand(filename, stream.Length));
 
-            //var container = _cosmosClient.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
-            //await container.CreateItemAsync(uploadItem);
-
-            await _mediator.Send(new CreateDocumentCommand(name, stream.Length));
-
-            log.LogInformation($"C# Blob trigger function Processed blob\n Name:{name} \n Size: {stream.Length} Bytes");
+            log.LogInformation($"Document created for {filename}");
         }
 
         [FunctionName(nameof(List))]
         public async Task<IActionResult> List(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "list")] HttpRequest req,
             ILogger log)
         {
-            var documents = await _mediator.Send(new ListDocumentsQuery());
+            var property = req.Query["property"];
+            var order = req.Query["order"];
 
-            //var container = _cosmosClient.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
+            var documents = await _mediator.Send(new GetDocumentsQuery(property, ListSortDirection.Ascending));
 
-            //var list = container.GetItemLinqQueryable<UploadItem>(true);
+            if (!documents.IsSuccessful) return new NotFoundResult();
 
-            if (documents == null || !documents.Any())
-            {
-                return new NotFoundResult();
-            }
-
-            log.LogInformation($"{documents.Count()} documents found.");
+            log.LogInformation($"{documents.Value.Count} documents found");
 
             return new OkObjectResult(documents);
         }
 
+        [FunctionName(nameof(Download))]
+        public async Task<IActionResult> Download(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "download/{filename}")]
+            HttpRequest req,
+            string filename,
+            ILogger log)
+        {
+            var document = await _mediator.Send(new GetDocumentsQuery(x =>
+                x.Filename.Equals(filename, StringComparison.InvariantCultureIgnoreCase)));
+
+            if (!document.IsSuccessful) return new NotFoundObjectResult("File not found.");
+
+            var blob = await _mediator.Send(new GetBlobAsByteArrayQuery(filename));
+
+            if (!blob.IsSuccessful) return new InternalServerErrorResult();
+
+            return new FileContentResult(blob.Value, document.Value.First().ContentType)
+            {
+                FileDownloadName = filename
+            };
+        }
+
         [FunctionName(nameof(Delete))]
         public async Task<IActionResult> Delete(
-
             [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "delete/{filename}")] HttpRequest req,
             string filename,
             ILogger log)
         {
-            log.LogInformation("C# HTTP trigger function processed a request.");
-            //var uri = UriFactory.CreateDocumentUri(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName,
-            //    filename);
+            if (!await UploadExists(filename)) return new NotFoundObjectResult("File not found.");
 
+            log.LogInformation($"Deleting {filename} file...");
+            if (!await _mediator.Send(new DeleteBlobCommand(filename))) return new BadRequestResult();
 
-            //var blobContainer = _cloudBlobClient.GetContainerReference(Constants.Storage.ContainerName);
-
-            //var blob = blobContainer.GetBlockBlobReference(filename);
-
-            //await blob.DeleteAsync();
-
-            await _mediator.Send(new DeleteFileCommand(filename));
-
-            await _mediator.Send(new DeleteDocumentCommand(filename));
-
-            //var container = _cosmosClient.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
-            //QueryDefinition queryDefinition = new QueryDefinition("select * from c");
-            //var queryResultSetIterator = container.GetItemQueryIterator<UploadItem>(queryDefinition);
-
-            //Microsoft.Azure.Cosmos.FeedResponse<UploadItem> currentResultSet =
-            //    await queryResultSetIterator.ReadNextAsync();
-
-            //var doc = currentResultSet.FirstOrDefault(x => x.Filename == filename);
-
-            //await container.DeleteItemAsync<UploadItem>(doc.id, new PartitionKey(doc.ContentType));
+            log.LogInformation($"Deleting {filename} document...");
+            if (!await _mediator.Send(new DeleteDocumentCommand(filename))) return new BadRequestResult();
 
             return new OkResult();
+        }
+
+        private async Task<bool> UploadExists(string filename)
+        {
+            var response = await _mediator.Send(new GetDocumentsQuery(x =>
+                x.Filename.Equals(filename, StringComparison.InvariantCultureIgnoreCase)));
+
+            if (!response.IsSuccessful)
+                return false;
+
+            return response.Value.Any();
         }
     }
 }

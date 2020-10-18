@@ -1,7 +1,7 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
+using Newtonsoft.Json;
 
-namespace DocumentManager.Common.Models
+namespace DocumentManager.Core.Models
 {
     public class Document
     {
@@ -18,8 +18,8 @@ namespace DocumentManager.Common.Models
 
         public string Filename { get; }
 
-        public DateTime DateCreated { get; 
-        }
+        public DateTime DateCreated { get; }
+
         public long Bytes { get; }
 
         public string ContentType { get; }

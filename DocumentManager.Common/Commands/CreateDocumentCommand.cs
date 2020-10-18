@@ -1,10 +1,10 @@
-﻿using DocumentManager.Common.Interfaces;
+﻿using System.Threading;
+using System.Threading.Tasks;
+using DocumentManager.Core.Interfaces;
 using MediatR;
 using Microsoft.Azure.Cosmos;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace DocumentManager.Common.Commands
+namespace DocumentManager.Core.Commands
 {
     public class CreateDocumentCommand : IRequest<bool>
     {
@@ -23,18 +23,17 @@ namespace DocumentManager.Common.Commands
         private readonly IUploadItemFactory _uploadItemFactory;
         private readonly CosmosClient _cosmosClient;
 
-        public CreateDocumentCommandHandler(IResolver<CosmosClient> resolver,IUploadItemFactory uploadItemFactory)
+        public CreateDocumentCommandHandler(CosmosClient cosmosClient, IUploadItemFactory uploadItemFactory)
         {
             _uploadItemFactory = uploadItemFactory;
-            _cosmosClient = resolver.Resolve();
+            _cosmosClient = cosmosClient;
         }
 
         public async Task<bool> Handle(CreateDocumentCommand request, CancellationToken cancellationToken)
         {
-            var uploadItem = _uploadItemFactory.Create(request.Filename,request.Bytes);
-
+            var document = _uploadItemFactory.Create(request.Filename,request.Bytes);
             var container = _cosmosClient.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
-            await container.CreateItemAsync(uploadItem);
+            await container.CreateItemAsync(document,null,null, cancellationToken);
 
             return true;
         }

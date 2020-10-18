@@ -1,7 +1,7 @@
 ﻿using System;
-using DocumentManager.Common.Interfaces;
+using DocumentManager.Core.Interfaces;
 
-namespace DocumentManager.Common.Providers
+namespace DocumentManager.Core.Providers
 {
     public class DateTimeProvider : IDateTimeProvider
     {

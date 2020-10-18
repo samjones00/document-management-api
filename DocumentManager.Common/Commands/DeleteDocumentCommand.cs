@@ -1,12 +1,11 @@
-﻿using DocumentManager.Common.Interfaces;
-using DocumentManager.Common.Models;
-using MediatR;
-using Microsoft.Azure.Cosmos;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using DocumentManager.Core.Models;
+using MediatR;
+using Microsoft.Azure.Cosmos;
 
-namespace DocumentManager.Common.Commands
+namespace DocumentManager.Core.Commands
 {
     public class DeleteDocumentCommand : IRequest<bool>
     {
@@ -22,22 +21,20 @@ namespace DocumentManager.Common.Commands
     {
         private readonly CosmosClient _cosmosClient;
 
-        public DeleteDocumentCommandHandler(IResolver<CosmosClient> resolver)
+        public DeleteDocumentCommandHandler(CosmosClient cosmosClient)
         {
-            _cosmosClient = resolver.Resolve();
+            _cosmosClient = cosmosClient;
         }
 
         public async Task<bool> Handle(DeleteDocumentCommand request, CancellationToken cancellationToken)
         {
             var container = _cosmosClient.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
-            QueryDefinition queryDefinition = new QueryDefinition("select * from c");
+            var queryDefinition = new QueryDefinition("select * from c");
             var queryResultSetIterator = container.GetItemQueryIterator<Document>(queryDefinition);
-
-            FeedResponse<Document> currentResultSet = await queryResultSetIterator.ReadNextAsync();
-
+            var currentResultSet = await queryResultSetIterator.ReadNextAsync();
             var doc = currentResultSet.FirstOrDefault(x => x.Filename == request.Filename);
 
-            await container.DeleteItemAsync<Document>(doc.Id, new PartitionKey(doc.ContentType));
+            await container.DeleteItemAsync<Document>(doc.Id, new PartitionKey(doc.ContentType),null, cancellationToken);
 
             return true;
         }

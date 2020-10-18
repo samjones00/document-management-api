@@ -1,34 +1,32 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using DocumentManager.Common.Interfaces;
 using MediatR;
 using Microsoft.WindowsAzure.Storage.Blob;
 
-namespace DocumentManager.Common.Commands
+namespace DocumentManager.Core.Commands
 {
-    public class DeleteFileCommand : IRequest<bool>
+    public class DeleteBlobCommand : IRequest<bool>
     {
         public string Filename { get; set; }
 
-        public DeleteFileCommand(string filename)
+        public DeleteBlobCommand(string filename)
         {
             Filename = filename;
         }
     }
 
-    public class DeleteFileCommandHandler : IRequestHandler<UploadFileCommand, bool>
+    public class DeleteFileCommandHandler : IRequestHandler<DeleteBlobCommand, bool>
     {
         private readonly CloudBlobClient _cloudBlobClient;
 
-        public DeleteFileCommandHandler(IResolver<CloudBlobClient> resolver)
+        public DeleteFileCommandHandler(CloudBlobClient cloudBlobClient)
         {
-            _cloudBlobClient = resolver.Resolve();
+            _cloudBlobClient = cloudBlobClient;
         }
 
-        public async Task<bool> Handle(UploadFileCommand request, CancellationToken cancellationToken)
+        public async Task<bool> Handle(DeleteBlobCommand request, CancellationToken cancellationToken)
         {
             var blobContainer = _cloudBlobClient.GetContainerReference(Constants.Storage.ContainerName);
-
             var blob = blobContainer.GetBlockBlobReference(request.Filename);
 
             await blob.DeleteAsync();

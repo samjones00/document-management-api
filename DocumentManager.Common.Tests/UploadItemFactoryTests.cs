@@ -1,10 +1,11 @@
 using System;
-using DocumentManager.Common.Interfaces;
+using DocumentManager.Core.Factories;
+using DocumentManager.Core.Interfaces;
 using Moq;
 using Shouldly;
 using Xunit;
 
-namespace DocumentManager.Common.Tests
+namespace DocumentManager.Core.Tests
 {
     public class UploadItemFactoryTests
     {
@@ -18,7 +19,7 @@ namespace DocumentManager.Common.Tests
             var dateTimeProvider = new Mock<IDateTimeProvider>();
             dateTimeProvider.Setup(x => x.UtcNow()).Returns(dateCreated);
 
-            var uploadItemFactory = new UploadItemFactory(dateTimeProvider.Object);
+            var uploadItemFactory = new DocumentFactory(dateTimeProvider.Object);
 
 
             var result = uploadItemFactory.Create(filename, bytes);
@@ -40,7 +41,7 @@ namespace DocumentManager.Common.Tests
             var dateTimeProvider = new Mock<IDateTimeProvider>();
             dateTimeProvider.Setup(x => x.UtcNow()).Returns(dateCreated);
 
-            var uploadItemFactory = new UploadItemFactory(dateTimeProvider.Object);
+            var uploadItemFactory = new DocumentFactory(dateTimeProvider.Object);
 
 
             var result = uploadItemFactory.Create(filename, bytes);

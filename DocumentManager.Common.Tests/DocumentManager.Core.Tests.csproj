@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DocumentManager.Common\DocumentManager.Common.csproj" />
+    <ProjectReference Include="..\DocumentManager.Common\DocumentManager.Core.csproj" />
   </ItemGroup>
 
 </Project>

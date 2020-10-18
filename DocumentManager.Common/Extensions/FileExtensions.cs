@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.StaticFiles;
 
-namespace DocumentManager.Common.Extensions
+namespace DocumentManager.Core.Extensions
 {
     public static class FileExtensions
     {

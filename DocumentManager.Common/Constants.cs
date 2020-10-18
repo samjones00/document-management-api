@@ -1,14 +1,10 @@
-﻿namespace DocumentManager.Common
+﻿namespace DocumentManager.Core
 {
     public static class Constants
     {
-        //public const string BlobStorageContainer = "Uploads";
-
         public static class Storage
         {
             public const string ContainerName = "uploads";
-            public const string ConnectionStringName = "StorageConnectionString";
-            public const string BlobPath = "Uploads/{name}";
         }
 
         public static class Cosmos

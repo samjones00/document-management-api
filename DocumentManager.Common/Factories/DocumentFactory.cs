@@ -1,14 +1,14 @@
-﻿using DocumentManager.Common.Extensions;
-using DocumentManager.Common.Interfaces;
-using DocumentManager.Common.Models;
+﻿using DocumentManager.Core.Extensions;
+using DocumentManager.Core.Interfaces;
+using DocumentManager.Core.Models;
 
-namespace DocumentManager.Common
+namespace DocumentManager.Core.Factories
 {
-    public class UploadItemFactory : IUploadItemFactory
+    public class DocumentFactory : IUploadItemFactory
     {
         private readonly IDateTimeProvider _dateTimeProvider;
 
-        public UploadItemFactory(IDateTimeProvider dateTimeProvider)
+        public DocumentFactory(IDateTimeProvider dateTimeProvider)
         {
             _dateTimeProvider = dateTimeProvider;
         }

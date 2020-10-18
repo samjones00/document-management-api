@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DocumentManager.Common.Interfaces
+namespace DocumentManager.Core.Interfaces
 {
     public interface IDateTimeProvider
     {

@@ -1,6 +1,6 @@
-﻿namespace DocumentManager.Common.Models
+﻿namespace DocumentManager.Core.Models
 {
-    public class UploadRequest
+    public struct UploadRequest
     {
         public string Filename { get; set; }
         public string Data { get; set; }

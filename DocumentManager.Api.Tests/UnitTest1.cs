@@ -1,7 +1,5 @@
 using System;
-using DocumentManager.Common;
-using DocumentManager.Common.Interfaces;
-using DocumentManager.Common.Providers;
+using DocumentManager.Core.Interfaces;
 using Moq;
 using Xunit;
 
