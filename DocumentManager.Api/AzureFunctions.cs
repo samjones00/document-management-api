@@ -1,6 +1,5 @@
 using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,18 +22,19 @@ namespace DocumentManager.Api
     {
         private readonly IMediator _mediator;
         private readonly IValidator<UploadRequest> _validator;
+        private readonly ILogger _logger;
 
-        public AzureFunctions(IMediator mediator, IValidator<UploadRequest> validator)
+        public AzureFunctions(IMediator mediator, IValidator<UploadRequest> validator, ILogger logger)
         {
             _mediator = mediator;
             _validator = validator;
+            _logger = logger;
         }
 
         [FunctionName(nameof(Upload))]
         public async Task<IActionResult> Upload(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)]
-            HttpRequest httpRequest,
-            ILogger log)
+            HttpRequest httpRequest)
         {
             var uploadRequest = JsonConvert.DeserializeObject<UploadRequest>(await new StreamReader(httpRequest.Body)
                 .ReadToEndAsync());
@@ -58,11 +58,11 @@ namespace DocumentManager.Api
                     Error = e.ErrorMessage
                 }));
 
-            log.LogInformation($"Uploading {filename} to blob storage...");
+            _logger.LogInformation($"Uploading {filename} to blob storage...");
 
             await _mediator.Send(new UploadBlobCommand(filename, byteArray));
 
-            log.LogInformation($"Upload of {filename} completed.");
+            _logger.LogInformation($"Upload of {filename} completed.");
 
             return new CreatedResult("/", new
             {
@@ -71,20 +71,18 @@ namespace DocumentManager.Api
             });
         }
 
-        [FunctionName(nameof(CreateRecord))]
-        public async Task CreateRecord([BlobTrigger("uploads/{filename}", Connection = "")]
-            Stream stream, string filename,
-            ILogger log)
+        [FunctionName(nameof(CreateDocument))]
+        public async Task CreateDocument([BlobTrigger("uploads/{filename}", Connection = "")]
+            Stream stream, string filename)
         {
             await _mediator.Send(new CreateDocumentCommand(filename, stream.Length));
 
-            log.LogInformation($"Document created for {filename}");
+            _logger.LogInformation($"Document created for {filename}");
         }
 
         [FunctionName(nameof(List))]
         public async Task<IActionResult> List(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "list")] HttpRequest req,
-            ILogger log)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "list")] HttpRequest req)
         {
             var property = req.Query["property"];
             var order = req.Query["order"];
@@ -93,7 +91,7 @@ namespace DocumentManager.Api
 
             if (!documents.IsSuccessful) return new NotFoundResult();
 
-            log.LogInformation($"{documents.Value.Count} documents found");
+            _logger.LogInformation($"{documents.Value.Count} documents found");
 
             return new OkObjectResult(documents);
         }
@@ -102,8 +100,7 @@ namespace DocumentManager.Api
         public async Task<IActionResult> Download(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "download/{filename}")]
             HttpRequest req,
-            string filename,
-            ILogger log)
+            string filename)
         {
             var document = await _mediator.Send(new GetDocumentsQuery(x =>
                 x.Filename.Equals(filename, StringComparison.InvariantCultureIgnoreCase)));
@@ -123,15 +120,14 @@ namespace DocumentManager.Api
         [FunctionName(nameof(Delete))]
         public async Task<IActionResult> Delete(
             [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "delete/{filename}")] HttpRequest req,
-            string filename,
-            ILogger log)
+            string filename)
         {
             if (!await UploadExists(filename)) return new NotFoundObjectResult("File not found.");
 
-            log.LogInformation($"Deleting {filename} file...");
+            _logger.LogInformation($"Deleting {filename} file...");
             if (!await _mediator.Send(new DeleteBlobCommand(filename))) return new BadRequestResult();
 
-            log.LogInformation($"Deleting {filename} document...");
+            _logger.LogInformation($"Deleting {filename} document...");
             if (!await _mediator.Send(new DeleteDocumentCommand(filename))) return new BadRequestResult();
 
             return new OkResult();

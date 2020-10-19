@@ -1,8 +1,10 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using DocumentManager.Core.Interfaces;
 using MediatR;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Logging;
 
 namespace DocumentManager.Core.Commands
 {
@@ -20,22 +22,39 @@ namespace DocumentManager.Core.Commands
 
     public class CreateDocumentCommandHandler : IRequestHandler<CreateDocumentCommand, bool>
     {
-        private readonly IUploadItemFactory _uploadItemFactory;
+        private readonly IDocumentFactory _documentFactory;
+        private readonly ILogger _logger;
         private readonly CosmosClient _cosmosClient;
 
-        public CreateDocumentCommandHandler(CosmosClient cosmosClient, IUploadItemFactory uploadItemFactory)
+        public CreateDocumentCommandHandler(CosmosClient cosmosClient, IDocumentFactory documentFactory,ILogger logger)
         {
-            _uploadItemFactory = uploadItemFactory;
+            _documentFactory = documentFactory;
+            _logger = logger;
             _cosmosClient = cosmosClient;
         }
 
         public async Task<bool> Handle(CreateDocumentCommand request, CancellationToken cancellationToken)
         {
-            var document = _uploadItemFactory.Create(request.Filename,request.Bytes);
-            var container = _cosmosClient.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
-            await container.CreateItemAsync(document,null,null, cancellationToken);
+            try
+            {
+                var document = _documentFactory.Create(request.Filename, request.Bytes);
 
-            return true;
+                if (!document.IsSuccessful)
+                {
+                    return false;
+                }
+
+                var container =
+                    _cosmosClient.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
+                await container.CreateItemAsync(document.Value, null, null, cancellationToken);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("An error occurred", ex);
+                return false;
+            }
         }
     }
 }

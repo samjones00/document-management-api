@@ -34,7 +34,7 @@ namespace DocumentManager.Api
             builder.Services.Replace(ServiceDescriptor.Singleton(typeof(IConfiguration), localConfig));
             builder.Services.AddMediatR(typeof(Constants).GetTypeInfo().Assembly);
             builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
-            builder.Services.AddSingleton<IUploadItemFactory, DocumentFactory>();
+            builder.Services.AddSingleton<IDocumentFactory, DocumentFactory>();
             builder.Services.AddSingleton<IValidator<UploadRequest>, UploadRequestValidator>();
 
             builder.Services.AddSingleton(_ =>

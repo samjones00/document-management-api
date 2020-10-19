@@ -4,6 +4,6 @@ namespace DocumentManager.Core.Interfaces
 {
     public interface IDateTimeProvider
     {
-        DateTime UtcNow();
+        DateTime UtcNow { get; }
     }
 }

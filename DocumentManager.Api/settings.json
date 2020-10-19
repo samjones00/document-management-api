@@ -5,7 +5,7 @@
     "CosmosDatabaseName": "UploadManager",
     "CosmosContainerName": "Uploads"
   },
-  "Validation": {
+  "Validator": {
     "MaximumFileSizeInBytes": "5242880",
     "AllowedContentTypes": [
       "image/png",

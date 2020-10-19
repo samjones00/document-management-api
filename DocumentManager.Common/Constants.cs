@@ -13,5 +13,12 @@
             public const string DatabaseName = "UploadManager";
             public const string ConnectionStringName = "CosmosConnectionString";
         }
+
+        public class ValidatorSettings
+        {
+            public const string SectionName = "Validator";
+            public const string MaximumFileSizeInBytes = "MaximumFileSizeInBytes";
+            public const string AllowedContentTypes = "AllowedContentTypes";
+        }
     }
 }
