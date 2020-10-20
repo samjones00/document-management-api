@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using DocumentManager.Core.Models;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using Microsoft.WindowsAzure.Storage.Blob;
+using Azure.Storage.Blobs;
 
 namespace DocumentManager.Core.Queries
 {
@@ -20,10 +20,10 @@ namespace DocumentManager.Core.Queries
 
     public class GetBlobAsByteArrayQueryHandler : IRequestHandler<GetBlobAsByteArrayQuery, ValueWrapper<byte[]>>
     {
-        private readonly CloudBlobClient _cloudBlobClient;
+        private readonly BlobClient _cloudBlobClient;
         private readonly ILogger _logger;
 
-        public GetBlobAsByteArrayQueryHandler(CloudBlobClient cloudBlobClient, ILogger logger)
+        public GetBlobAsByteArrayQueryHandler(BlobClient cloudBlobClient, ILogger logger)
         {
             _cloudBlobClient = cloudBlobClient;
             _logger = logger;
@@ -33,8 +33,12 @@ namespace DocumentManager.Core.Queries
         {
             try
             {
-                var blobContainer = _cloudBlobClient.GetContainerReference(Constants.Storage.ContainerName);
-                var blob = blobContainer.GetBlockBlobReference(request.Filename);
+                    BlobContainerClient container = new BlobContainerClient(connectionString, Constants.Storage.ContainerName);
+
+                _cloudBlobClient.DownloadAsync()
+
+                //var blobContainer = _cloudBlobClient.(Constants.Storage.ContainerName);
+                var blob = container.getblock(request.Filename);
 
                 byte[] fileContent = new byte[blob.StreamWriteSizeInBytes];
 
