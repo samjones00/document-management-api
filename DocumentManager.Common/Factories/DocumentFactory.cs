@@ -17,10 +17,10 @@ namespace DocumentManager.Core.Factories
         {
             if (string.IsNullOrEmpty(filename) || bytes == 0)
             {
-                return new ValueWrapper<Document>(null,false);
+                return new ValueWrapper<Document>(null, false);
             }
 
-            return new ValueWrapper<Document>(new Document(filename, bytes, filename.GetContentType(), _dateTimeProvider.UtcNow),true);
+            return new ValueWrapper<Document>(new Document(filename, bytes, filename.GetContentType(), _dateTimeProvider.UtcNow), true);
         }
     }
 }

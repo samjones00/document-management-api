@@ -46,6 +46,7 @@ namespace DocumentManager.Core.Commands
 
                 var container =
                     _cosmosClient.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
+
                 await container.CreateItemAsync(document.Value, null, null, cancellationToken);
 
                 return true;

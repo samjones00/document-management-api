@@ -10,7 +10,7 @@ namespace DocumentManager.Core.Tests
     public class DocumentFactoryTests
     {
         [Fact]
-        public void Create_GivenFilenameAndSize_ReturnsObject()
+        public void Create_GivenFilenameAndSize_ReturnsDocumentObjectValue()
         {
             var filename = "example.pdf";
             var bytes = 2048;
@@ -33,7 +33,7 @@ namespace DocumentManager.Core.Tests
         }
 
         [Fact]
-        public void Create_GivenFilenameWithoutExtension_ReturnsObject()
+        public void Create_GivenFilenameWithoutExtension_ReturnsDocumentObjectValue()
         {
             var filename = "example";
             var bytes = 2048;
@@ -56,9 +56,9 @@ namespace DocumentManager.Core.Tests
         }
 
         [Fact]
-        public void Create_GivenEmptyFilename_ReturnsObject()
+        public void Create_GivenEmptyFilename_ReturnsNullObjectValue()
         {
-            var filename = "";
+            var filename = string.Empty;
             var bytes = 2048;
             var dateCreated = new DateTime(2000, 12, 31, 01, 02, 03);
 
@@ -74,10 +74,10 @@ namespace DocumentManager.Core.Tests
         }
 
         [Fact]
-        public void Create_GivenEmptyBytes_ReturnsObject()
+        public void Create_GivenEmptyBytes_ReturnsNullObjectValue()
         {
             var filename = "example.pdf";
-            var bytes = 2048;
+            var bytes = 0;
             var dateCreated = new DateTime(2000, 12, 31, 01, 02, 03);
 
             var dateTimeProvider = new Mock<IDateTimeProvider>();
