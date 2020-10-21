@@ -14,8 +14,8 @@ namespace DocumentManager.Core.Queries
 {
     public class GetDocumentsQuery : IRequest<ValueWrapper<List<Document>>>
     {
-        public Expression<Func<Document, bool>> Query { get; set; }
-        public string SortProperty { get; set; }
+        public Expression<Func<Document, bool>> Query { get; }
+        public string SortProperty { get; }
 
         public GetDocumentsQuery(Expression<Func<Document, bool>> query)
         {

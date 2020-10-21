@@ -10,13 +10,11 @@ namespace DocumentManager.Core.Tests.Validators
 {
     public class UploadRequestValidatorTests
     {
-        public readonly int MaximumFileSizeInBytes = 5242880;
-
         [Fact]
         public void Validate_GivenAllowedContentType_ShouldReturnValid()
         {
             var configuration = new Mock<IConfiguration>();
-            ConfigurationHelper.SetupMaximumFileSizeInBytes(configuration, MaximumFileSizeInBytes);
+            ConfigurationHelper.SetupMaximumFileSizeInBytes(configuration, Constants.MaximumFileSizeInBytes);
             ConfigurationHelper.SetupAllowedContentTypes(configuration, "application/pdf");
 
             var validator = new UploadRequestValidator(configuration.Object);
@@ -37,7 +35,7 @@ namespace DocumentManager.Core.Tests.Validators
         public void Validate_GivenNotAllowedContentType_ShouldReturnInvalid()
         {
             var configuration = new Mock<IConfiguration>();
-            ConfigurationHelper.SetupMaximumFileSizeInBytes(configuration, MaximumFileSizeInBytes);
+            ConfigurationHelper.SetupMaximumFileSizeInBytes(configuration, Constants.MaximumFileSizeInBytes);
             ConfigurationHelper.SetupAllowedContentTypes(configuration, "application/pdf");
 
             var validator = new UploadRequestValidator(configuration.Object);
@@ -58,15 +56,15 @@ namespace DocumentManager.Core.Tests.Validators
         public void Validate_GivenAllowedContentTypeAndExceedingSize_ShouldReturnInvalid()
         {
             var configuration = new Mock<IConfiguration>();
-            ConfigurationHelper.SetupMaximumFileSizeInBytes(configuration, MaximumFileSizeInBytes*2);
+            ConfigurationHelper.SetupMaximumFileSizeInBytes(configuration, Constants.MaximumFileSizeInBytes);
             ConfigurationHelper.SetupAllowedContentTypes(configuration, "application/pdf");
 
             var validator = new UploadRequestValidator(configuration.Object);
 
             var request = new UploadRequest
             {
-                Filename = "example.csv",
-                Bytes = new byte[MaximumFileSizeInBytes + 1]
+                Filename = "example.pdf",
+                Bytes = new byte[Constants.MaximumFileSizeInBytes + 1]
             };
 
             var result = validator.Validate(request);
@@ -79,8 +77,8 @@ namespace DocumentManager.Core.Tests.Validators
         public void Validate_GivenAllowedContentTypeAndNoFilename_ShouldReturnInvalid()
         {
             var configuration = new Mock<IConfiguration>();
-            ConfigurationHelper.SetupMaximumFileSizeInBytes(configuration, MaximumFileSizeInBytes);
-            ConfigurationHelper.SetupAllowedContentTypes(configuration,"application/pdf");
+            ConfigurationHelper.SetupMaximumFileSizeInBytes(configuration, Constants.MaximumFileSizeInBytes);
+            ConfigurationHelper.SetupAllowedContentTypes(configuration, "application/pdf");
 
             var validator = new UploadRequestValidator(configuration.Object);
 
@@ -100,7 +98,7 @@ namespace DocumentManager.Core.Tests.Validators
         public void Validate_GivenAllowedContentTypeAndZeroBytes_ShouldReturnInvalid()
         {
             var configuration = new Mock<IConfiguration>();
-            ConfigurationHelper.SetupMaximumFileSizeInBytes(configuration, MaximumFileSizeInBytes);
+            ConfigurationHelper.SetupMaximumFileSizeInBytes(configuration, Constants.MaximumFileSizeInBytes);
             ConfigurationHelper.SetupAllowedContentTypes(configuration, "application/pdf");
 
             var validator = new UploadRequestValidator(configuration.Object);

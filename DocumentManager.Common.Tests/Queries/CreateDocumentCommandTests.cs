@@ -1,68 +1,81 @@
-﻿using System.Collections.Generic;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using DocumentManager.Core.Commands;
 using DocumentManager.Core.Factories;
-using DocumentManager.Core.Models;
-using Microsoft.Azure.Cosmos;
 using Moq;
 using Xunit;
-using Microsoft.Extensions.Logging;
 using Shouldly;
+using DocumentManager.Core.Interfaces;
+using System;
 
 namespace DocumentManager.Core.Tests.Queries
 {
     public class CreateDocumentCommandTests
     {
         [Fact]
-        public async Task Handler()
+        public async Task Handler_GivenValidParameters_ReturnsTrue()
         {
-            //List<Document> results = new List<Document>();
-            //{
-               
-            //};
-            //CosmosClient _mockClient = new CosmosClient();
-            //_mockClient.Setup
+            var filename = "example.pdf";
+            var bytes = new byte[1000];
+            var cancellationToken = new CancellationToken();
 
-            //Mock<FeedResponse<Document>> mockedResponse = new Mock<FeedResponse<Document>>();
-            //mockedResponse.Setup(r => r.Resource).Returns(results);
-            //Mock<FeedIterator<Document>> mockedIterator = new Mock<FeedIterator<Document>>();
-            //mockedIterator.Setup(q => q.ReadNextAsync(It.IsAny<CancellationToken>()))
-            //    .ReturnsAsync(() => mockedResponse.Object);
-            //mockedIterator.SetupSequence(q => q.HasMoreResults)
-            //    .Returns(true)
-            //    .Returns(false);
+            var dateCreated = new DateTime(2000, 12, 31, 01, 02, 03);
+            var dateTimeProvider = new Mock<IDateTimeProvider>();
+            dateTimeProvider.Setup(x => x.UtcNow).Returns(dateCreated);
 
-            //while (mockedIterator.Object.HasMoreResults)
-            //{
-            //    FeedResponse<Document> feedresponse = await mockedIterator.Object.ReadNextAsync();
-            //    Assert.Equal(results, feedresponse.Resource);
-            //}
+            var repository = new Mock<IDocumentRepository>();
+            var factory = new DocumentFactory(dateTimeProvider.Object);
 
-            //Mock.Get(mockedIterator.Object)
-            //    .Verify(q => q.ReadNextAsync(It.IsAny<CancellationToken>()), Times.Once);
-            //Mock.Get(mockedIterator.Object)
-            //    .Verify(q => q.HasMoreResults, Times.Exactly(2));
-            //Mock.Get(mockedResponse.Object)
-            //    .Verify(r => r.Resource, Times.Once);
+            var request = new CreateDocumentCommand(filename, bytes.Length);
+            var handler = new CreateDocumentCommandHandler(repository.Object, factory);
 
-            ////Mock<CosmosDatabases> mockDatabases = new Mock<CosmosDatabases>();
-            ////Mock<CosmosClient> client = new CosmosClient();
-            ////  client.Setup(x => x.Databases).Returns(mockDatabases.Object);
+            var result = await handler.Handle(request, cancellationToken);
 
-            ////CosmosClient client = mockClient.Object;
-            ////Assert.IsNotNull(client.Databases);
+            result.IsSuccessful.ShouldBeTrue();
+        }
 
-            //var logger = new Mock<ILogger>();
+        [Fact]
+        public async Task Handler_GivenEmptyFilenameParameters_ReturnsTrue()
+        {
+            var filename = "";
+            var bytes = new byte[1000];
+            var cancellationToken = new CancellationToken();
 
-            ////var dateTimeProvider = new Mock<IDateTimeProvider>();
-            //var uploadItemFactory = new Mock<DocumentFactory>();
-            //var request = new CreateDocumentCommand("example.pdf",12345);
-            //var handler = new CreateDocumentCommandHandler(_mockClient.Object, uploadItemFactory.Object, logger.Object);
-            //var cancellationToken = new CancellationToken();
-            //var response = await handler.Handle(request, cancellationToken);
+            var dateCreated = new DateTime(2000, 12, 31, 01, 02, 03);
+            var dateTimeProvider = new Mock<IDateTimeProvider>();
+            dateTimeProvider.Setup(x => x.UtcNow).Returns(dateCreated);
 
-            //response.ShouldBeTrue();
+            var repository = new Mock<IDocumentRepository>();
+            var factory = new DocumentFactory(dateTimeProvider.Object);
+
+            var request = new CreateDocumentCommand(filename, bytes.Length);
+            var handler = new CreateDocumentCommandHandler(repository.Object, factory);
+
+            var result = await handler.Handle(request, cancellationToken);
+
+            result.IsSuccessful.ShouldBeFalse();
+        }
+
+        [Fact]
+        public async Task Handler_GivenEmptyFileParameters_ReturnsTrue()
+        {
+            var filename = "example.pdf";
+            var bytes = new byte[0];
+            var cancellationToken = new CancellationToken();
+
+            var dateCreated = new DateTime(2000, 12, 31, 01, 02, 03);
+            var dateTimeProvider = new Mock<IDateTimeProvider>();
+            dateTimeProvider.Setup(x => x.UtcNow).Returns(dateCreated);
+
+            var repository = new Mock<IDocumentRepository>();
+            var factory = new DocumentFactory(dateTimeProvider.Object);
+
+            var request = new CreateDocumentCommand(filename, bytes.Length);
+            var handler = new CreateDocumentCommandHandler(repository.Object, factory);
+
+            var result = await handler.Handle(request, cancellationToken);
+
+            result.IsSuccessful.ShouldBeFalse();
         }
     }
 }

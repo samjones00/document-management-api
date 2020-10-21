@@ -13,7 +13,7 @@ namespace DocumentManager.Core.Tests.Helpers
 
             configuration.Setup(a =>
                     a.GetSection(
-                        $"{Constants.ValidatorSettings.SectionName}:{Constants.ValidatorSettings.MaximumFileSizeInBytes}"))
+                        $"{Core.Constants.ValidatorSettings.SectionName}:{Core.Constants.ValidatorSettings.MaximumFileSizeInBytes}"))
                 .Returns(section1.Object);
         }
 
@@ -34,7 +34,7 @@ namespace DocumentManager.Core.Tests.Helpers
 
             configuration.Setup(a =>
                     a.GetSection(
-                        $"{Constants.ValidatorSettings.SectionName}:{Constants.ValidatorSettings.AllowedContentTypes}"))
+                        $"{Core.Constants.ValidatorSettings.SectionName}:{Core.Constants.ValidatorSettings.AllowedContentTypes}"))
                 .Returns(sectionGroup.Object);
         }
     }

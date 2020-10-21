@@ -5,7 +5,7 @@ using Moq;
 using Shouldly;
 using Xunit;
 
-namespace DocumentManager.Core.Tests
+namespace DocumentManager.Core.Tests.Factories
 {
     public class DocumentFactoryTests
     {
@@ -14,8 +14,8 @@ namespace DocumentManager.Core.Tests
         {
             var filename = "example.pdf";
             var bytes = 2048;
-            var dateCreated = new DateTime(2000,12,31,01,02,03);
 
+            var dateCreated = new DateTime(2000,12,31,01,02,03);
             var dateTimeProvider = new Mock<IDateTimeProvider>();
             dateTimeProvider.Setup(x => x.UtcNow).Returns(dateCreated);
 

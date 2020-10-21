@@ -15,7 +15,7 @@ namespace DocumentManager.Core.Factories
 
         public ValueWrapper<Document> Create(string filename, long bytes)
         {
-            if (string.IsNullOrEmpty(filename) || bytes == 0)
+            if (string.IsNullOrEmpty(filename) || bytes <= 0)
             {
                 return new ValueWrapper<Document>(null, false);
             }

@@ -50,7 +50,7 @@ namespace DocumentManager.Api
 
                 request.Bytes = byteArray;
 
-                var validationResult = _validator.Validate(request);
+                var validationResult = await _validator.ValidateAsync(request);
 
                 if (!validationResult.IsValid)
                     return new BadRequestObjectResult(validationResult.Errors.Select(e => new
@@ -88,8 +88,15 @@ namespace DocumentManager.Api
         {
             try
             {
-                await _mediator.Send(new CreateDocumentCommand(filename, stream.Length));
-                _logger.LogDebug($"Document created for {filename}");
+                var request = await _mediator.Send(new CreateDocumentCommand(filename, stream.Length));
+
+                if(request.IsSuccessful)
+                {
+                    _logger.LogDebug($"Document created for {filename}");
+                }
+
+                _logger.LogError($"Unableto create document for {filename}");
+
             }
             catch (Exception ex)
             {
@@ -109,7 +116,7 @@ namespace DocumentManager.Api
 
                 _logger.LogDebug($"{documents.Value.Count} documents found");
 
-                return new OkObjectResult(documents);
+                return new OkObjectResult(documents.Value);
             }
             catch (Exception ex)
             {
@@ -127,18 +134,18 @@ namespace DocumentManager.Api
         {
             try
             {
-                var document = await _mediator.Send(new GetDocumentsQuery(x =>
-                    x.Filename.Equals(filename, StringComparison.InvariantCultureIgnoreCase)));
+                var document = await _mediator.Send(new GetDocumentQuery(filename));
 
                 if (!document.IsSuccessful) return new NotFoundObjectResult("File not found.");
 
-                var blob = await _mediator.Send(new GetBlobAsByteArrayQuery(filename));
+                var blob = await _mediator.Send(new GetBlobAsMemoryStream(filename));
 
                 if (!blob.IsSuccessful) return new NotFoundResult();
 
-                return new FileContentResult(blob.Value.ToArray(), document.Value.First().ContentType)
+                return new FileContentResult(blob.Value.ToArray(), document.Value.ContentType)
                 {
-                    FileDownloadName = filename
+                    FileDownloadName = filename,
+                    LastModified = document.Value.DateCreated
                 };
             }
             catch (Exception ex)
@@ -182,13 +189,9 @@ namespace DocumentManager.Api
 
         private async Task<bool> UploadExists(string filename)
         {
-            var response = await _mediator.Send(new GetDocumentsQuery(x =>
-                x.Filename.Equals(filename, StringComparison.InvariantCultureIgnoreCase)));
+            var response = await _mediator.Send(new GetDocumentQuery(filename));
 
-            if (!response.IsSuccessful)
-                return false;
-
-            return response.Value.Any();
+            return response.IsSuccessful;
         }
     }
 }

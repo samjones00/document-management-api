@@ -18,9 +18,7 @@ namespace DocumentManager.Core.Tests.Commands
             var cancellationToken = new CancellationToken();
 
             var repository = new Mock<IStorageRepository>();
-            //repository.Setup(x => x.Add(filename, bytes, cancellationToken)).Returns(Task.FromResult("Result string"));
-
-           
+   
             var request = new DeleteBlobCommand(filename);
             var handler = new DeleteBlobCommandHandler(repository.Object);
 

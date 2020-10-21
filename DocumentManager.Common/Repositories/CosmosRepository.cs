@@ -6,24 +6,20 @@ using System.Threading;
 using System.Threading.Tasks;
 using DocumentManager.Core.Interfaces;
 using DocumentManager.Core.Models;
-using DocumentManager.Core.Queries;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Linq;
-using Microsoft.Extensions.Logging;
 
 namespace DocumentManager.Core.Repositories
 {
-    public class CosmosRepository: IDocumentRepository
+    public class CosmosRepository : IDocumentRepository
     {
         private readonly CosmosClient _client;
-        private readonly ILogger<ListDocumentsQueryHandler> _logger;
 
-        public CosmosRepository(CosmosClient client, ILogger<ListDocumentsQueryHandler> logger)
+        public CosmosRepository(CosmosClient client)
         {
             _client = client;
-            _logger = logger;
         }
-        
+
         private string GenerateQuery(string sortProperty)
         {
             var isValidProperty = Enum.TryParse<SortProperty>(sortProperty, true, out var sortPropertyEnum);
@@ -120,6 +116,17 @@ namespace DocumentManager.Core.Repositories
             return results;
         }
 
+        public async Task<Document> Get(string filename)
+        {
+            var container = _client.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
+
+            var document = container.GetItemLinqQueryable<Document>()
+                .Where((d, i) => d.Filename.Equals(filename, StringComparison.InvariantCultureIgnoreCase))
+                .FirstOrDefault();
+
+            return document;
+        }
+
         public async Task Delete(string filename, CancellationToken cancellationToken)
         {
             var container = _client.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
@@ -138,6 +145,5 @@ namespace DocumentManager.Core.Repositories
 
             await container.CreateItemAsync(document, null, null, cancellationToken);
         }
-
     }
 }
