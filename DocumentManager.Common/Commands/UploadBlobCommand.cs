@@ -1,14 +1,12 @@
-﻿using System;
-using System.IO;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
-using Azure.Storage.Blobs;
+using DocumentManager.Core.Interfaces;
+using DocumentManager.Core.Models;
 using MediatR;
-using Microsoft.Extensions.Logging;
 
 namespace DocumentManager.Core.Commands
 {
-    public class UploadBlobCommand : IRequest<bool>
+    public class UploadBlobCommand : IRequest<ValueWrapper<bool>>
     {
         public byte[] Bytes { get; set; }
         public string Filename { get; set; }
@@ -20,33 +18,19 @@ namespace DocumentManager.Core.Commands
         }
     }
 
-    public class UploadFileCommandHandler : IRequestHandler<UploadBlobCommand, bool>
+    public class UploadBlobCommandHandler : IRequestHandler<UploadBlobCommand, ValueWrapper<bool>>
     {
-        private readonly BlobContainerClient _client;
-        private readonly ILogger<DeleteDocumentCommandHandler> _logger;
+        private readonly IStorageRepository _repository;
 
-        public UploadFileCommandHandler(BlobContainerClient client, ILogger<DeleteDocumentCommandHandler> logger)
+        public UploadBlobCommandHandler(IStorageRepository repository)
         {
-            _client = client;
-            _logger = logger;
+            _repository = repository;
         }
 
-        public async Task<bool> Handle(UploadBlobCommand request, CancellationToken cancellationToken)
+        public async Task<ValueWrapper<bool>> Handle(UploadBlobCommand request, CancellationToken cancellationToken)
         {
-            try
-            {
-                var blobClient = _client.GetBlobClient(request.Filename);
-                var stream = new MemoryStream(request.Bytes);
-
-                await blobClient.UploadAsync(stream, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("An error occurred", ex);
-                return false;
-            }
-
-            return true;
+            await _repository.Add(request.Filename, request.Bytes, cancellationToken);
+            return new ValueWrapper<bool>(true);
         }
     }
 }

@@ -4,45 +4,36 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using DocumentManager.Core.Interfaces;
 using DocumentManager.Core.Models;
-using MediatR;
+using DocumentManager.Core.Queries;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Linq;
 using Microsoft.Extensions.Logging;
 
-namespace DocumentManager.Core.Queries
+namespace DocumentManager.Core.Repositories
 {
-    public class GetDocumentsQuery : IRequest<ValueWrapper<List<Document>>>
-    {
-        public Expression<Func<Document, bool>> Query { get; set; }
-        public string SortProperty { get; set; }
-
-        public GetDocumentsQuery(Expression<Func<Document, bool>> query)
-        {
-            Query = query;
-        }
-
-        public GetDocumentsQuery(string sortProperty)
-        {
-            SortProperty = sortProperty;
-        }
-    }
-
-    public class ListDocumentsQueryHandler : IRequestHandler<GetDocumentsQuery, ValueWrapper<List<Document>>>
+    public class CosmosRepository: IDocumentRepository
     {
         private readonly CosmosClient _client;
         private readonly ILogger<ListDocumentsQueryHandler> _logger;
 
-        public ListDocumentsQueryHandler(CosmosClient client, ILogger<ListDocumentsQueryHandler> logger)
+        public CosmosRepository(CosmosClient client, ILogger<ListDocumentsQueryHandler> logger)
         {
             _client = client;
             _logger = logger;
         }
-
-        public async Task<ValueWrapper<List<Document>>> Handle(GetDocumentsQuery request,
-            CancellationToken cancellationToken)
+        
+        private string GenerateQuery(string sortProperty)
         {
-            var queryDefinition = new QueryDefinition(GenerateQuery(request.SortProperty));
+            var isValidProperty = Enum.TryParse<SortProperty>(sortProperty, true, out var sortPropertyEnum);
+
+            return isValidProperty ? $"select * from c order by c.{sortPropertyEnum}" : "select * from c";
+        }
+
+        public async Task<IEnumerable<Document>> Get(Expression<Func<Document, bool>> Query, string sortProperty, CancellationToken cancellationToken)
+        {
+            var queryDefinition = new QueryDefinition(GenerateQuery(sortProperty));
 
             var container = _client.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
             //var queryDefinition = request.IsSortedQuery
@@ -90,7 +81,7 @@ namespace DocumentManager.Core.Queries
 
             // QueryDefinition queryDefinition2 = request.ToQueryDefinition();
 
-            var isValidProperty = Enum.TryParse<SortProperty>(request.SortProperty, true, out var sortPropertyEnum);
+            var isValidProperty = Enum.TryParse<SortProperty>(sortProperty, true, out var sortPropertyEnum);
 
             Func<IEnumerable<Document>, IOrderedEnumerable<Document>> a = (x => x.OrderBy(x => x.Bytes));
 
@@ -110,7 +101,7 @@ namespace DocumentManager.Core.Queries
             //if (request.Query != null)
             //{
             var setIterator = container.GetItemLinqQueryable<Document>()
-                .Where(request.Query)
+                .Where(Query)
                 .OrderBy(x => a)
                 .ToFeedIterator();
 
@@ -126,14 +117,27 @@ namespace DocumentManager.Core.Queries
                 results.AddRange(response.ToList());
             }
 
-            return new ValueWrapper<List<Document>>(results, true);
+            return results;
         }
 
-        private string GenerateQuery(string sortProperty)
+        public async Task Delete(string filename, CancellationToken cancellationToken)
         {
-            var isValidProperty = Enum.TryParse<SortProperty>(sortProperty, true, out var sortPropertyEnum);
+            var container = _client.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
+            var queryDefinition = new QueryDefinition("select * from c");
+            var queryResultSetIterator = container.GetItemQueryIterator<Document>(queryDefinition);
+            var currentResultSet = await queryResultSetIterator.ReadNextAsync();
+            var doc = currentResultSet.FirstOrDefault(x => x.Filename == filename);
 
-            return isValidProperty ? $"select * from c order by c.{sortPropertyEnum}" : "select * from c";
+            await container.DeleteItemAsync<Document>(doc.Id, new PartitionKey(doc.ContentType), null, cancellationToken);
         }
+
+        public async Task Add(Document document, CancellationToken cancellationToken)
+        {
+            var container =
+                _client.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
+
+            await container.CreateItemAsync(document, null, null, cancellationToken);
+        }
+
     }
 }

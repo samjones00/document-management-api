@@ -1,14 +1,12 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using DocumentManager.Core.Interfaces;
+using DocumentManager.Core.Models;
 using MediatR;
-using Microsoft.Azure.Cosmos;
-using Microsoft.Extensions.Logging;
 
 namespace DocumentManager.Core.Commands
 {
-    public class CreateDocumentCommand : IRequest<bool>
+    public class CreateDocumentCommand : IRequest<ValueWrapper<bool>>
     {
         public string Filename { get; set; }
         public long Bytes { get; set; }
@@ -20,42 +18,30 @@ namespace DocumentManager.Core.Commands
         }
     }
 
-    public class CreateDocumentCommandHandler : IRequestHandler<CreateDocumentCommand, bool>
+    public class CreateDocumentCommandHandler : IRequestHandler<CreateDocumentCommand, ValueWrapper<bool>>
     {
+        private readonly IDocumentRepository _repository;
         private readonly IDocumentFactory _documentFactory;
-        private readonly ILogger<CreateDocumentCommandHandler> _logger;
-        private readonly CosmosClient _client;
 
-        public CreateDocumentCommandHandler(CosmosClient client, IDocumentFactory documentFactory, ILogger<CreateDocumentCommandHandler> logger)
+        public CreateDocumentCommandHandler(IDocumentRepository repository, IDocumentFactory documentFactory)
         {
+            _repository = repository;
             _documentFactory = documentFactory;
-            _logger = logger;
-            _client = client;
         }
 
-        public async Task<bool> Handle(CreateDocumentCommand request, CancellationToken cancellationToken)
+        public async Task<ValueWrapper<bool>> Handle(CreateDocumentCommand request, CancellationToken cancellationToken)
         {
-            try
+
+            var document = _documentFactory.Create(request.Filename, request.Bytes);
+
+            if (!document.IsSuccessful)
             {
-                var document = _documentFactory.Create(request.Filename, request.Bytes);
-
-                if (!document.IsSuccessful)
-                {
-                    return false;
-                }
-
-                var container =
-                    _client.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
-
-                await container.CreateItemAsync(document.Value, null, null, cancellationToken);
-
-                return true;
+                return new ValueWrapper<bool>(false);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError("An error occurred", ex);
-                return false;
-            }
+
+            await _repository.Add(document.Value, cancellationToken);
+
+            return new ValueWrapper<bool>(true);
         }
     }
 }

@@ -1,13 +1,12 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
-using Azure.Storage.Blobs;
+using DocumentManager.Core.Interfaces;
+using DocumentManager.Core.Models;
 using MediatR;
-using Microsoft.Extensions.Logging;
 
 namespace DocumentManager.Core.Commands
 {
-    public class DeleteBlobCommand : IRequest<bool>
+    public class DeleteBlobCommand : IRequest<ValueWrapper<bool>>
     {
         public string Filename { get; set; }
 
@@ -17,32 +16,19 @@ namespace DocumentManager.Core.Commands
         }
     }
 
-    public class DeleteFileCommandHandler : IRequestHandler<DeleteBlobCommand, bool>
+    public class DeleteBlobCommandHandler : IRequestHandler<DeleteBlobCommand, ValueWrapper<bool>>
     {
-        private readonly BlobContainerClient _client;
-        private readonly ILogger<DeleteFileCommandHandler> _logger;
+        private readonly IStorageRepository _repository;
 
-        public DeleteFileCommandHandler(BlobContainerClient client, ILogger<DeleteFileCommandHandler> logger)
+        public DeleteBlobCommandHandler(IStorageRepository repository)
         {
-            _client = client;
-            _logger = logger;
+            _repository = repository;
         }
 
-        public async Task<bool> Handle(DeleteBlobCommand request, CancellationToken cancellationToken)
+        public async Task<ValueWrapper<bool>> Handle(DeleteBlobCommand request, CancellationToken cancellationToken)
         {
-            try
-            {
-                var blockBlob = _client.GetBlobClient(request.Filename);
-
-                await blockBlob.DeleteIfExistsAsync();
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("An error occurred", ex);
-                return false;
-            }
+            await _repository.Delete(request.Filename, cancellationToken);
+            return new ValueWrapper<bool>(true);
         }
     }
 }

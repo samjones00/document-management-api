@@ -1,15 +1,12 @@
-﻿using System;
-using System.Linq;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
+using DocumentManager.Core.Interfaces;
 using DocumentManager.Core.Models;
 using MediatR;
-using Microsoft.Azure.Cosmos;
-using Microsoft.Extensions.Logging;
 
 namespace DocumentManager.Core.Commands
 {
-    public class DeleteDocumentCommand : IRequest<bool>
+    public class DeleteDocumentCommand : IRequest<ValueWrapper<bool>>
     {
         public string Filename { get; set; }
 
@@ -19,37 +16,19 @@ namespace DocumentManager.Core.Commands
         }
     }
 
-    public class DeleteDocumentCommandHandler : IRequestHandler<DeleteDocumentCommand, bool>
+    public class DeleteDocumentCommandHandler : IRequestHandler<DeleteDocumentCommand, ValueWrapper<bool>>
     {
-        private readonly CosmosClient _client;
-        private readonly ILogger<DeleteDocumentCommandHandler> _logger;
+        private readonly IDocumentRepository _repository;
 
-        public DeleteDocumentCommandHandler(CosmosClient client, ILogger<DeleteDocumentCommandHandler> logger)
+        public DeleteDocumentCommandHandler(IDocumentRepository repository)
         {
-            _client = client;
-            _logger = logger;
+            _repository = repository;
         }
 
-        public async Task<bool> Handle(DeleteDocumentCommand request, CancellationToken cancellationToken)
+        public async Task<ValueWrapper<bool>> Handle(DeleteDocumentCommand request, CancellationToken cancellationToken)
         {
-            try
-            {
-                var container = _client.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
-                var queryDefinition = new QueryDefinition("select * from c");
-                var queryResultSetIterator = container.GetItemQueryIterator<Document>(queryDefinition);
-                var currentResultSet = await queryResultSetIterator.ReadNextAsync();
-                var doc = currentResultSet.FirstOrDefault(x => x.Filename == request.Filename);
-
-                await container.DeleteItemAsync<Document>(doc.Id, new PartitionKey(doc.ContentType), null, cancellationToken);
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("An error occurred", ex);
-                return false;
-            }
+            await _repository.Delete(request.Filename, cancellationToken);
+            return new ValueWrapper<bool>(true);
         }
     }
-
 }

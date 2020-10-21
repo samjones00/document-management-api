@@ -1,12 +1,10 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using DocumentManager.Core.Models;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Models;
+using DocumentManager.Core.Interfaces;
 
 namespace DocumentManager.Core.Queries
 {
@@ -22,34 +20,20 @@ namespace DocumentManager.Core.Queries
 
     public class GetBlobAsByteArrayQueryHandler : IRequestHandler<GetBlobAsByteArrayQuery, ValueWrapper<MemoryStream>>
     {
-        private readonly BlobContainerClient _client;
+        private readonly IStorageRepository _repository;
         private readonly ILogger<GetBlobAsByteArrayQueryHandler> _logger;
 
-        public GetBlobAsByteArrayQueryHandler(BlobContainerClient client, ILogger<GetBlobAsByteArrayQueryHandler> logger)
+        public GetBlobAsByteArrayQueryHandler(IStorageRepository repository,
+            ILogger<GetBlobAsByteArrayQueryHandler> logger)
         {
-            _client = client;
+            _repository = repository;
             _logger = logger;
         }
 
         public async Task<ValueWrapper<MemoryStream>> Handle(GetBlobAsByteArrayQuery request,
             CancellationToken cancellationToken)
         {
-            try
-            {
-                var blockBlob = _client.GetBlobClient(request.Filename);
-                BlobDownloadInfo download = await blockBlob.DownloadAsync(cancellationToken);
-
-                using (var stream = new MemoryStream())
-                {
-                    await download.Content.CopyToAsync(stream, cancellationToken);
-                    return new ValueWrapper<MemoryStream>(stream, true);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("An error occurred", ex);
-                return new ValueWrapper<MemoryStream>(null, false);
-            }
+            return new ValueWrapper<MemoryStream>(await _repository.Get(request.Filename, cancellationToken), true);
         }
     }
 }

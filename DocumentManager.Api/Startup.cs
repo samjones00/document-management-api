@@ -7,6 +7,7 @@ using DocumentManager.Core.Factories;
 using DocumentManager.Core.Interfaces;
 using DocumentManager.Core.Models;
 using DocumentManager.Core.Providers;
+using DocumentManager.Core.Repositories;
 using DocumentManager.Core.Validators;
 using FluentValidation;
 using MediatR;
@@ -37,6 +38,8 @@ namespace DocumentManager.Api
             builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
             builder.Services.AddSingleton<IDocumentFactory, DocumentFactory>();
             builder.Services.AddSingleton<IValidator<UploadRequest>, UploadRequestValidator>();
+            builder.Services.AddTransient<IDocumentRepository, CosmosRepository>();
+            builder.Services.AddTransient<IStorageRepository, BlobStorageRepository>();
 
             ConfigureLogging(builder);
             ConfigureClients(builder, localConfig);
