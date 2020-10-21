@@ -22,9 +22,9 @@ namespace DocumentManager.Api
     {
         private readonly IMediator _mediator;
         private readonly IValidator<UploadRequest> _validator;
-        private readonly ILogger _logger;
+        private readonly ILogger<AzureFunctions> _logger;
 
-        public AzureFunctions(IMediator mediator, IValidator<UploadRequest> validator, ILogger logger)
+        public AzureFunctions(IMediator mediator, IValidator<UploadRequest> validator, ILogger<AzureFunctions> logger)
         {
             _mediator = mediator;
             _validator = validator;
@@ -111,7 +111,7 @@ namespace DocumentManager.Api
 
             if (!blob.IsSuccessful) return new InternalServerErrorResult();
 
-            return new FileContentResult(blob.Value, document.Value.First().ContentType)
+            return new FileContentResult(blob.Value.ToArray(), document.Value.First().ContentType)
             {
                 FileDownloadName = filename
             };

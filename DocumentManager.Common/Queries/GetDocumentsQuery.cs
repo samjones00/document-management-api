@@ -35,12 +35,12 @@ namespace DocumentManager.Core.Queries
 
     public class ListDocumentsQueryHandler : IRequestHandler<GetDocumentsQuery,ValueWrapper<List<Document>>>
     {
-        private readonly CosmosClient _cosmosClient;
-        private readonly ILogger _logger;
+        private readonly CosmosClient _client;
+        private readonly ILogger<ListDocumentsQueryHandler> _logger;
 
-        public ListDocumentsQueryHandler(CosmosClient cosmosClient, ILogger logger)
+        public ListDocumentsQueryHandler(CosmosClient client, ILogger<ListDocumentsQueryHandler> logger)
         {
-            _cosmosClient = cosmosClient;
+            _client = client;
             _logger = logger;
         }
 
@@ -48,7 +48,7 @@ namespace DocumentManager.Core.Queries
         {
             try
             {
-                var container = _cosmosClient.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
+                var container = _client.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
                 var queryDefinition = request.IsSortedQuery
                     ? new QueryDefinition("select * from c order by c.@property")
                         .WithParameter("@property", request.SortProperty)

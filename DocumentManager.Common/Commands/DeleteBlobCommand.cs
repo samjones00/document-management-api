@@ -1,7 +1,9 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
+using Azure.Storage.Blobs;
 using MediatR;
-using Microsoft.WindowsAzure.Storage.Blob;
+using Microsoft.Extensions.Logging;
 
 namespace DocumentManager.Core.Commands
 {
@@ -17,21 +19,30 @@ namespace DocumentManager.Core.Commands
 
     public class DeleteFileCommandHandler : IRequestHandler<DeleteBlobCommand, bool>
     {
-        private readonly CloudBlobClient _cloudBlobClient;
+        private readonly BlobContainerClient _client;
+        private readonly ILogger<DeleteFileCommandHandler> _logger;
 
-        public DeleteFileCommandHandler(CloudBlobClient cloudBlobClient)
+        public DeleteFileCommandHandler(BlobContainerClient client, ILogger<DeleteFileCommandHandler> logger)
         {
-            _cloudBlobClient = cloudBlobClient;
+            _client = client;
+            _logger = logger;
         }
 
         public async Task<bool> Handle(DeleteBlobCommand request, CancellationToken cancellationToken)
         {
-            var blobContainer = _cloudBlobClient.GetContainerReference(Constants.Storage.ContainerName);
-            var blob = blobContainer.GetBlockBlobReference(request.Filename);
+            try
+            {
+                var blockBlob = _client.GetBlobClient(request.Filename);
 
-            await blob.DeleteAsync();
+                await blockBlob.DeleteIfExistsAsync();
 
-            return true;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("An error occurred", ex);
+                return false;
+            }
         }
     }
 }

@@ -1,8 +1,10 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Azure.Storage.Blobs;
 using MediatR;
-using Microsoft.WindowsAzure.Storage.Blob;
+using Microsoft.Extensions.Logging;
 
 namespace DocumentManager.Core.Commands
 {
@@ -20,21 +22,29 @@ namespace DocumentManager.Core.Commands
 
     public class UploadFileCommandHandler : IRequestHandler<UploadBlobCommand, bool>
     {
-        private readonly CloudBlobClient _cloudBlobClient;
+        private readonly BlobContainerClient _client;
+        private readonly ILogger<DeleteDocumentCommandHandler> _logger;
 
-        public UploadFileCommandHandler(CloudBlobClient cloudBlobClient)
+        public UploadFileCommandHandler(BlobContainerClient client, ILogger<DeleteDocumentCommandHandler> logger)
         {
-            _cloudBlobClient = cloudBlobClient;
+            _client = client;
+            _logger = logger;
         }
 
         public async Task<bool> Handle(UploadBlobCommand request, CancellationToken cancellationToken)
         {
-            var container = _cloudBlobClient.GetContainerReference(Constants.Storage.ContainerName);
-            _ = await container.CreateIfNotExistsAsync();
-            var filename = request.Filename;
-            var cloudBlockBlob = container.GetBlockBlobReference(filename);
+            try
+            {
+                var blobClient = _client.GetBlobClient(request.Filename);
+                var stream = new MemoryStream(request.Bytes);
 
-            await cloudBlockBlob.UploadFromStreamAsync(new MemoryStream(request.Bytes));
+                await blobClient.UploadAsync(stream, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("An error occurred", ex);
+                return false;
+            }
 
             return true;
         }

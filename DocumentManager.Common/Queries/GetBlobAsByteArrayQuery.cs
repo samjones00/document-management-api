@@ -1,14 +1,16 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using DocumentManager.Core.Models;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 
 namespace DocumentManager.Core.Queries
 {
-    public class GetBlobAsByteArrayQuery : IRequest<ValueWrapper<byte[]>>
+    public class GetBlobAsByteArrayQuery : IRequest<ValueWrapper<MemoryStream>>
     {
         public string Filename { get; set; }
 
@@ -18,38 +20,35 @@ namespace DocumentManager.Core.Queries
         }
     }
 
-    public class GetBlobAsByteArrayQueryHandler : IRequestHandler<GetBlobAsByteArrayQuery, ValueWrapper<byte[]>>
+    public class GetBlobAsByteArrayQueryHandler : IRequestHandler<GetBlobAsByteArrayQuery, ValueWrapper<MemoryStream>>
     {
-        private readonly BlobClient _cloudBlobClient;
-        private readonly ILogger _logger;
+        private readonly BlobContainerClient _client;
+        private readonly ILogger<GetBlobAsByteArrayQueryHandler> _logger;
 
-        public GetBlobAsByteArrayQueryHandler(BlobClient cloudBlobClient, ILogger logger)
+        public GetBlobAsByteArrayQueryHandler(BlobContainerClient client, ILogger<GetBlobAsByteArrayQueryHandler> logger)
         {
-            _cloudBlobClient = cloudBlobClient;
+            _client = client;
             _logger = logger;
         }
 
-        public async Task<ValueWrapper<byte[]>> Handle(GetBlobAsByteArrayQuery request, CancellationToken cancellationToken)
+        public async Task<ValueWrapper<MemoryStream>> Handle(GetBlobAsByteArrayQuery request,
+            CancellationToken cancellationToken)
         {
             try
             {
-                    BlobContainerClient container = new BlobContainerClient(connectionString, Constants.Storage.ContainerName);
+                var blockBlob = _client.GetBlobClient(request.Filename);
+                BlobDownloadInfo download = await blockBlob.DownloadAsync(cancellationToken);
 
-                _cloudBlobClient.DownloadAsync()
-
-                //var blobContainer = _cloudBlobClient.(Constants.Storage.ContainerName);
-                var blob = container.getblock(request.Filename);
-
-                byte[] fileContent = new byte[blob.StreamWriteSizeInBytes];
-
-                await blob.DownloadToByteArrayAsync(fileContent, 0);
-
-                return new ValueWrapper<byte[]>(fileContent, true);
+                using (var stream = new MemoryStream())
+                {
+                    await download.Content.CopyToAsync(stream, cancellationToken);
+                    return new ValueWrapper<MemoryStream>(stream, true);
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError("An error occurred", ex);
-                return new ValueWrapper<byte[]>(null, false);
+                return new ValueWrapper<MemoryStream>(null, false);
             }
         }
     }

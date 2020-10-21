@@ -5,6 +5,7 @@
         public static class Storage
         {
             public const string ContainerName = "uploads";
+            public const string ConnectionStringName = "AzureWebJobsStorage";
         }
 
         public static class Cosmos
@@ -14,7 +15,7 @@
             public const string ConnectionStringName = "CosmosConnectionString";
         }
 
-        public class ValidatorSettings
+        public static class ValidatorSettings
         {
             public const string SectionName = "Validator";
             public const string MaximumFileSizeInBytes = "MaximumFileSizeInBytes";

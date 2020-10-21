@@ -23,14 +23,14 @@ namespace DocumentManager.Core.Commands
     public class CreateDocumentCommandHandler : IRequestHandler<CreateDocumentCommand, bool>
     {
         private readonly IDocumentFactory _documentFactory;
-        private readonly ILogger _logger;
-        private readonly CosmosClient _cosmosClient;
+        private readonly ILogger<CreateDocumentCommandHandler> _logger;
+        private readonly CosmosClient _client;
 
-        public CreateDocumentCommandHandler(CosmosClient cosmosClient, IDocumentFactory documentFactory,ILogger logger)
+        public CreateDocumentCommandHandler(CosmosClient client, IDocumentFactory documentFactory, ILogger<CreateDocumentCommandHandler> logger)
         {
             _documentFactory = documentFactory;
             _logger = logger;
-            _cosmosClient = cosmosClient;
+            _client = client;
         }
 
         public async Task<bool> Handle(CreateDocumentCommand request, CancellationToken cancellationToken)
@@ -45,7 +45,7 @@ namespace DocumentManager.Core.Commands
                 }
 
                 var container =
-                    _cosmosClient.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
+                    _client.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
 
                 await container.CreateItemAsync(document.Value, null, null, cancellationToken);
 
