@@ -5,6 +5,12 @@
         public T Value { get; set; }
         public bool IsSuccessful { get; set; }
 
+        public ValueWrapper(bool success)
+        {
+            Value = default(T);
+            IsSuccessful = success;
+        }
+
         public ValueWrapper(T value, bool success)
         {
             Value = value;

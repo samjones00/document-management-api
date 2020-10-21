@@ -1,5 +1,4 @@
 using System;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -36,101 +35,149 @@ namespace DocumentManager.Api
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)]
             HttpRequest httpRequest)
         {
-            var uploadRequest = JsonConvert.DeserializeObject<UploadRequest>(await new StreamReader(httpRequest.Body)
-                .ReadToEndAsync());
-
-            var filename = uploadRequest.Filename;
-            var byteArray = Convert.FromBase64String(uploadRequest.Data);
-
-            if (await UploadExists(filename))
+            try
             {
-                return new BadRequestObjectResult("File already exists.");
-            }
+                var request = JsonConvert.DeserializeObject<UploadRequest>(await new StreamReader(httpRequest.Body)
+                    .ReadToEndAsync());
 
-            uploadRequest.Bytes = byteArray;
+                var filename = request.Filename;
+                var byteArray = Convert.FromBase64String(request.Data);
 
-            var validationResult = _validator.Validate(uploadRequest);
-
-            if (!validationResult.IsValid)
-                return new BadRequestObjectResult(validationResult.Errors.Select(e => new
+                if (await UploadExists(filename))
                 {
-                    Field = e.PropertyName,
-                    Error = e.ErrorMessage
-                }));
+                    return new BadRequestObjectResult("File already exists.");
+                }
 
-            _logger.LogInformation($"Uploading {filename} to blob storage...");
+                request.Bytes = byteArray;
 
-            await _mediator.Send(new UploadBlobCommand(filename, byteArray));
+                var validationResult = _validator.Validate(request);
 
-            _logger.LogInformation($"Upload of {filename} completed.");
+                if (!validationResult.IsValid)
+                    return new BadRequestObjectResult(validationResult.Errors.Select(e => new
+                    {
+                        Field = e.PropertyName,
+                        Error = e.ErrorMessage
+                    }));
 
-            return new CreatedResult("/", new
+                _logger.LogDebug($"Uploading {filename} to blob storage...");
+
+                var uploadResponse = await _mediator.Send(new UploadBlobCommand(filename, byteArray));
+
+                if (uploadResponse.IsSuccessful)
+                {
+                    return new CreatedResult("/", new
+                    {
+                        Filename = filename,
+                        Size = byteArray.Length
+                    });
+                }
+
+                return new BadRequestResult();
+            }
+            catch (Exception ex)
             {
-                Filename = filename,
-                Size = byteArray.Length
-            });
+                _logger.LogError(message: "Error when uploading file.", exception: ex);
+
+                return new InternalServerErrorResult();
+            }
         }
 
         [FunctionName(nameof(CreateDocument))]
         public async Task CreateDocument([BlobTrigger("uploads/{filename}", Connection = "")]
             Stream stream, string filename)
         {
-            await _mediator.Send(new CreateDocumentCommand(filename, stream.Length));
-
-            _logger.LogInformation($"Document created for {filename}");
+            try
+            {
+                await _mediator.Send(new CreateDocumentCommand(filename, stream.Length));
+                _logger.LogDebug($"Document created for {filename}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(message: $"Error when creating document for '{filename}.", exception: ex);
+            }
         }
 
         [FunctionName(nameof(List))]
         public async Task<IActionResult> List(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "list")] HttpRequest req)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "list/{sortProperty}")] HttpRequest httpRequest, string sortProperty)
         {
-            var property = req.Query["property"];
-            var order = req.Query["order"];
+            try
+            {
+                var documents = await _mediator.Send(new GetDocumentsQuery(sortProperty));
 
-            var documents = await _mediator.Send(new GetDocumentsQuery(property, ListSortDirection.Ascending));
+                if (!documents.IsSuccessful) return new InternalServerErrorResult();
 
-            if (!documents.IsSuccessful) return new NotFoundResult();
+                _logger.LogDebug($"{documents.Value.Count} documents found");
 
-            _logger.LogInformation($"{documents.Value.Count} documents found");
+                return new OkObjectResult(documents);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(message: "Error when listing files.", exception: ex);
 
-            return new OkObjectResult(documents);
+                return new InternalServerErrorResult();
+            }
         }
 
         [FunctionName(nameof(Download))]
         public async Task<IActionResult> Download(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "download/{filename}")]
-            HttpRequest req,
+            HttpRequest httpRequest,
             string filename)
         {
-            var document = await _mediator.Send(new GetDocumentsQuery(x =>
-                x.Filename.Equals(filename, StringComparison.InvariantCultureIgnoreCase)));
-
-            if (!document.IsSuccessful) return new NotFoundObjectResult("File not found.");
-
-            var blob = await _mediator.Send(new GetBlobAsByteArrayQuery(filename));
-
-            if (!blob.IsSuccessful) return new InternalServerErrorResult();
-
-            return new FileContentResult(blob.Value.ToArray(), document.Value.First().ContentType)
+            try
             {
-                FileDownloadName = filename
-            };
+                var document = await _mediator.Send(new GetDocumentsQuery(x =>
+                    x.Filename.Equals(filename, StringComparison.InvariantCultureIgnoreCase)));
+
+                if (!document.IsSuccessful) return new NotFoundObjectResult("File not found.");
+
+                var blob = await _mediator.Send(new GetBlobAsByteArrayQuery(filename));
+
+                if (!blob.IsSuccessful) return new NotFoundResult();
+
+                return new FileContentResult(blob.Value.ToArray(), document.Value.First().ContentType)
+                {
+                    FileDownloadName = filename
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(message: "Error when downloading file.", exception: ex);
+
+                return new InternalServerErrorResult();
+            }
         }
 
         [FunctionName(nameof(Delete))]
         public async Task<IActionResult> Delete(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "delete/{filename}")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "delete/{filename}")] HttpRequest httpRequest,
             string filename)
         {
-            if (!await UploadExists(filename)) return new NotFoundObjectResult("File not found.");
+            try
+            {
+                if (!await UploadExists(filename)) return new NotFoundObjectResult("File not found.");
 
-            _logger.LogInformation($"Deleting {filename} file...");
-            if (!await _mediator.Send(new DeleteBlobCommand(filename))) return new BadRequestResult();
+                _logger.LogDebug($"Deleting {filename} file...");
 
-            _logger.LogInformation($"Deleting {filename} document...");
-            if (!await _mediator.Send(new DeleteDocumentCommand(filename))) return new BadRequestResult();
+                var deleteBlobRequest = await _mediator.Send(new DeleteBlobCommand(filename));
 
-            return new OkResult();
+                if (!deleteBlobRequest.IsSuccessful) return new BadRequestResult();
+
+                _logger.LogDebug($"Deleting {filename} document...");
+
+                var deleteDocumentRequest = await _mediator.Send(new DeleteDocumentCommand(filename));
+
+                if (!deleteDocumentRequest.IsSuccessful) return new BadRequestResult();
+
+                return new OkResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(message: $"Error when deleting '{filename}'.", exception: ex);
+
+                return new InternalServerErrorResult();
+            }
         }
 
         private async Task<bool> UploadExists(string filename)
