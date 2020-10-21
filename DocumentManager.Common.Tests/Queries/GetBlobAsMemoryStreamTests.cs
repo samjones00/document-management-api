@@ -17,7 +17,7 @@ namespace DocumentManager.Core.Tests.Queries
         {
             var filename = "example.pdf";
 
-            var stream = StreamHelper.CreateExampleStream(10);
+            var stream = StreamHelper.CreateExampleStream();
 
             var cancellationToken = new CancellationToken();
             var repository = new Mock<IStorageRepository>();

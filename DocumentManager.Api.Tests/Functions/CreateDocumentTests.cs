@@ -18,7 +18,7 @@ namespace DocumentManager.Api.Tests.Functions
         public async Task CreateDocument_ShouldCreateDocument()
         {
             var filename = "example.pdf";
-            var stream = StreamHelper.GetExampleFile(filename);
+            var stream = StreamHelper.CreateExampleStream();
 
             var configuration = new Mock<IConfiguration>();
             ConfigurationHelper.SetupMaximumFileSizeInBytes(configuration, Constants.MaximumFileSizeInBytes);

@@ -19,13 +19,4 @@
     <ProjectReference Include="..\DocumentManager.Common.Tests\DocumentManager.Core.Tests.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="ExampleFiles\example.jpg">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="ExampleFiles\example.pdf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
 </Project>

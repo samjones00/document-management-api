@@ -24,7 +24,7 @@ namespace DocumentManager.Api.Tests.Functions
         public async Task Upload_GivenValidParameters_ShouldUploadToBlobStorage()
         {
             var filename = "example.pdf";
-            var stream = StreamHelper.GetExampleFile(filename);
+            var stream = StreamHelper.CreateExampleStream();
             var base64 = StreamHelper.ConvertStreamToBase64(stream);
 
             var configuration = new Mock<IConfiguration>();
