@@ -27,7 +27,7 @@ namespace DocumentManager.Core.Queries
 
         public async Task<ValueWrapper<Document>> Handle(GetDocumentQuery request, CancellationToken cancellationToken)
         {
-            var document = await _repository.Get(request.Filename);
+            var document = _repository.Get(request.Filename);
 
             if (document == null)
             {

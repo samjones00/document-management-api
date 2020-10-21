@@ -24,7 +24,6 @@ namespace DocumentManager.Api.Tests.Functions
         [Fact]
         public async Task List_GivenNoParametersProvided_ShouldReturnDocumentCollection()
         {
-            var filename = "example.pdf";
             var sortProperty = "Filename";
 
             var expectedResults = new List<Document>
@@ -37,8 +36,8 @@ namespace DocumentManager.Api.Tests.Functions
             var expectedContentResult = new CreatedResult("/", expectedResults);
 
             var configuration = new Mock<IConfiguration>();
-            //ConfigurationHelper.SetupMaximumFileSizeInBytes(configuration, Constants.MaximumFileSizeInBytes);
-            //ConfigurationHelper.SetupAllowedContentTypes(configuration, "application/pdf");
+            ConfigurationHelper.SetupMaximumFileSizeInBytes(configuration, Constants.MaximumFileSizeInBytes);
+            ConfigurationHelper.SetupAllowedContentTypes(configuration, "application/pdf");
 
             var validator = new UploadRequestValidator(configuration.Object);
             var logger = new FakeLogger<AzureFunctions>();

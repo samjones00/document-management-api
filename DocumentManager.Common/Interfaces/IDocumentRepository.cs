@@ -12,6 +12,6 @@ namespace DocumentManager.Core.Interfaces
         Task<IEnumerable<Document>> Get(Expression<Func<Document, bool>> Query, string sortProperty, CancellationToken cancellationToken);
         Task Delete(string filename, CancellationToken cancellationToken);
         Task Add(Document document, CancellationToken cancellationToken);
-        Task<Document> Get(string filename);
+        Document Get(string filename);
     }
 }

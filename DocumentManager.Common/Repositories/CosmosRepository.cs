@@ -116,7 +116,7 @@ namespace DocumentManager.Core.Repositories
             return results;
         }
 
-        public async Task<Document> Get(string filename)
+        public Document Get(string filename)
         {
             var container = _client.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
 
