@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using DocumentManager.Core.Extensions;
 using DocumentManager.Core.Interfaces;
 using DocumentManager.Core.Models;
 using Microsoft.Azure.Cosmos;
-using Microsoft.Azure.Cosmos.Linq;
 
 namespace DocumentManager.Core.Repositories
 {
@@ -20,108 +20,42 @@ namespace DocumentManager.Core.Repositories
             _client = client;
         }
 
-        private string GenerateQuery(string sortProperty)
+        public IEnumerable<Document> GetCollection(string sortProperty, string sortDirection, CancellationToken cancellationToken)
         {
-            var isValidProperty = Enum.TryParse<SortProperty>(sortProperty, true, out var sortPropertyEnum);
-
-            return isValidProperty ? $"select * from c order by c.{sortPropertyEnum}" : "select * from c";
-        }
-
-        public async Task<IEnumerable<Document>> Get(Expression<Func<Document, bool>> Query, string sortProperty, CancellationToken cancellationToken)
-        {
-            var queryDefinition = new QueryDefinition(GenerateQuery(sortProperty));
-
             var container = _client.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
-            //var queryDefinition = request.IsSortedQuery
-            //    ? new QueryDefinition("select * from c order by c.Filename where Filename = '@direction'")
-            //        .WithParameter("@property", request.SortProperty)
-            //        .WithParameter("@direction", request.SortDirection)
-            //    : new QueryDefinition("select * from c");
 
-            var results = new List<Document>();
-
-            //QueryDefinition query2 = new QueryDefinition(
-            //        "select * from t where t.Account = @account")
-            //    .WithParameter("@account", "12345");
-
-            //var a = document => document.Filename
-
-            //var param = "Address";
-            //var pi = typeof(Document).GetProperty(request.SortProperty);
-            //var orderByAddress = items.OrderBy(x => pi.GetValue(x, null));
-
-            //using (FeedIterator<Document> setIterator = container.GetItemLinqQueryable<Document>()
-            //    //.Where(request.Query)
-            //    .OrderBy(s => s.GetType().GetProperty(request.SortProperty).GetValue(s))
-
-            //    .ToFeedIterator())
-            //{
-            //    while (setIterator.HasMoreResults)
-            //    {
-
-            //        var response = await setIterator.ReadNextAsync(cancellationToken);
-
-            //        results.AddRange(response.ToList());
-            //    }
-            //}
-
-            //return new ValueWrapper<List<Document>>(results, true);
-
-            //var query1 = container
-            //    .GetItemLinqQueryable<Document>()
-            //    .Where(x => x.Id == "apple-iphone")
-            //    .OrderBy(x => x);
-            //System.Linq.Expressions.Expression<Func<IEnumerable<Document>, bool>> e = x => x.Where(d => d.Id == f);
-
-            //var a = new Func<IEnumerable<Document>, bool>(document => document.Where(x => x.Filename.Equals("hi")))
-
-            // QueryDefinition queryDefinition2 = request.ToQueryDefinition();
+            Func<Document, object> sortQuery = document => document.DateCreated;
 
             var isValidProperty = Enum.TryParse<SortProperty>(sortProperty, true, out var sortPropertyEnum);
+            Enum.TryParse<ListSortDirection>(sortDirection, true, out var sortDirectionEnum);
 
-            Func<IEnumerable<Document>, IOrderedEnumerable<Document>> a = (x => x.OrderBy(x => x.Bytes));
+            var isAscending = sortDirectionEnum == ListSortDirection.Ascending;
 
-
-            switch (sortPropertyEnum)
+            if (isValidProperty)
             {
-                case SortProperty.Bytes:
-                    a = documents => documents.OrderBy(x => x.Bytes);
-                    break;
-                default:
-                    break;
+                sortQuery = sortPropertyEnum switch
+                {
+                    SortProperty.Bytes => document => document.Bytes,
+                    SortProperty.Filename => document => document.Filename,
+                    SortProperty.ContentType => document => document.ContentType,
+                    _ => sortQuery
+                };
             }
 
-
-
-
-            //if (request.Query != null)
-            //{
-            var setIterator = container.GetItemLinqQueryable<Document>()
-                .Where(Query)
-                .OrderBy(x => a)
-                .ToFeedIterator();
-
-
-            //}
-
-            //var query = container.GetItemQueryIterator<Document>(queryDefinition);
-
-            while (setIterator.HasMoreResults)
-            {
-                var response = await setIterator.ReadNextAsync(cancellationToken);
-
-                results.AddRange(response.ToList());
-            }
+            var results = container.GetItemLinqQueryable<Document>(true)
+                .OrderByWithDirection(sortQuery,!isAscending)
+                .AsEnumerable();
 
             return results;
         }
 
-        public Document Get(string filename)
+        public Document GetSingle(string filename)
         {
             var container = _client.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
 
-            var document = container.GetItemLinqQueryable<Document>()
+            var document = container.GetItemLinqQueryable<Document>(true)
                 .Where((d, i) => d.Filename.Equals(filename, StringComparison.InvariantCultureIgnoreCase))
+                .AsEnumerable()
                 .FirstOrDefault();
 
             return document;
@@ -146,10 +80,9 @@ namespace DocumentManager.Core.Repositories
 
         public async Task Add(Document document, CancellationToken cancellationToken)
         {
-            var container =
-                _client.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
+            var container = _client.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
 
-            await container.CreateItemAsync(document, null, null, cancellationToken);
+            await container.CreateItemAsync(document, cancellationToken: cancellationToken);
         }
     }
 }

@@ -24,7 +24,7 @@ namespace DocumentManager.Core.Tests.Queries
 
             var dateCreated = new DateTime(2000, 12, 31, 01, 02, 03);
             var repository = new Mock<IDocumentRepository>();
-            repository.Setup(x => x.Get(filename)).Returns(new Document(filename, bytes, contentType, dateCreated));
+            repository.Setup(x => x.GetSingle(filename)).Returns(new Document(filename, bytes, contentType, dateCreated));
 
             var request = new GetDocumentQuery(filename);
             var handler = new GetDocumentQueryHandler(repository.Object);
@@ -45,7 +45,7 @@ namespace DocumentManager.Core.Tests.Queries
             var cancellationToken = new CancellationToken();
 
             var repository = new Mock<IDocumentRepository>();
-            repository.Setup(x => x.Get(filename)).Returns((Document)null);
+            repository.Setup(x => x.GetSingle(filename)).Returns((Document)null);
 
             var request = new GetDocumentQuery(filename);
             var handler = new GetDocumentQueryHandler(repository.Object);

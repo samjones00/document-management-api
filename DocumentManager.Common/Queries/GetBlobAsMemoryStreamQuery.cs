@@ -30,7 +30,7 @@ namespace DocumentManager.Core.Queries
         {
             var response = await _repository.Get(request.Filename, cancellationToken);
 
-            if(response == null || response.Length == 0)
+            if(response == null)
             {
                 return new ValueWrapper<MemoryStream>(null, false);
             }

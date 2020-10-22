@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -95,7 +96,7 @@ namespace DocumentManager.Api
                     _logger.LogDebug($"Document created for {filename}");
                 }
 
-                _logger.LogError($"Unableto create document for {filename}");
+                _logger.LogError($"Unable to create document for {filename}");
 
             }
             catch (Exception ex)
@@ -106,15 +107,15 @@ namespace DocumentManager.Api
 
         [FunctionName(nameof(List))]
         public async Task<IActionResult> List(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "list/{sortProperty}")] HttpRequest httpRequest, string sortProperty)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "list/{sortProperty?}/{sortDirection?}")] HttpRequest httpRequest, string sortProperty, string sortDirection = "Ascending")
         {
             try
             {
-                var documents = await _mediator.Send(new GetDocumentCollectionQuery(sortProperty));
+                var documents = await _mediator.Send(new GetDocumentCollectionQuery(sortProperty, sortDirection));
 
                 if (!documents.IsSuccessful) return new InternalServerErrorResult();
 
-                _logger.LogDebug($"{documents.Value.Count} documents found");
+                _logger.LogDebug($"{documents.Value.Count()} documents found.");
 
                 return new OkObjectResult(documents.Value);
             }

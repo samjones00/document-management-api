@@ -7,6 +7,7 @@ namespace DocumentManager.Core.Models
     {
         public Document(string filename, long bytes, string contentType, DateTime dateCreated)
         {
+            Id = Guid.NewGuid().ToString();
             Filename = filename;
             Bytes = bytes;
             ContentType = contentType;
@@ -14,7 +15,7 @@ namespace DocumentManager.Core.Models
         }
 
         [JsonProperty("id")]
-        public string Id { get; } = Guid.NewGuid().ToString();
+        public string Id { get; set; } 
 
         public string Filename { get; }
 

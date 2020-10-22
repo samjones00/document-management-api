@@ -21,7 +21,7 @@ namespace DocumentManager.Core.Tests.Queries
 
             var cancellationToken = new CancellationToken();
             var repository = new Mock<IStorageRepository>();
-            repository.Setup(x => x.Get(filename, cancellationToken)).Returns(Task.FromResult(stream));
+            repository.Setup(x => x.Get(filename, cancellationToken)).ReturnsAsync(stream);
 
             var request = new GetBlobAsMemoryStreamQuery(filename);
             var handler = new GetBlobAsMemoryStreamQueryHandler(repository.Object);
@@ -42,7 +42,7 @@ namespace DocumentManager.Core.Tests.Queries
 
             var cancellationToken = new CancellationToken();
             var repository = new Mock<IStorageRepository>();
-            repository.Setup(x => x.Get(filename, cancellationToken)).Returns(Task.FromResult((MemoryStream)null));
+            repository.Setup(x => x.Get(filename, cancellationToken)).ReturnsAsync((MemoryStream)null);
 
             var request = new GetBlobAsMemoryStreamQuery(filename);
             var handler = new GetBlobAsMemoryStreamQueryHandler(repository.Object);

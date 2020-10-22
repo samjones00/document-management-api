@@ -29,7 +29,7 @@ namespace DocumentManager.Core.Queries
         public async Task<ValueWrapper<Document>> Handle(GetDocumentQuery request, CancellationToken cancellationToken)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
-            var document = _repository.Get(request.Filename);
+            var document = _repository.GetSingle(request.Filename);
 
             if (document == null)
             {

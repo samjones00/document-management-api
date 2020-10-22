@@ -9,7 +9,6 @@ using DocumentManager.Core.Tests;
 using DocumentManager.Core.Tests.Helpers;
 using DocumentManager.Core.Validators;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.Configuration;
@@ -25,6 +24,7 @@ namespace DocumentManager.Api.Tests.Functions
         public async Task List_GivenNoParametersProvided_ShouldReturnDocumentCollection()
         {
             var sortProperty = "Filename";
+            var sortDirection = "Ascending";
 
             var expectedResults = new List<Document>
             {
@@ -44,19 +44,19 @@ namespace DocumentManager.Api.Tests.Functions
             var mediator = new Mock<IMediator>();
             mediator
                 .Setup(m => m.Send(It.IsAny<GetDocumentCollectionQuery>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new ValueWrapper<List<Document>>(new List<Document>(), true));
+                .ReturnsAsync(new ValueWrapper<IEnumerable<Document>>(new List<Document>(), true));
 
             var function = new AzureFunctions(mediator.Object, validator, logger);
 
             var httpRequest = HttpRequestHelper.CreateMockRequest(expectedResults);
-            var actionResult = await function.List(httpRequest.Object, sortProperty);
-            var statusCodeResult = (IStatusCodeActionResult)actionResult;
+            var actionResult = await function.List(httpRequest.Object, sortProperty, sortDirection);
+            var statusCodeResult = (IStatusCodeActionResult) actionResult;
 
-            var createdResult = (OkObjectResult)actionResult;
+            var createdResult = (OkObjectResult) actionResult;
 
             createdResult.Value.ShouldNotBeSameAs(expectedContentResult.Value);
 
-            statusCodeResult.StatusCode.ShouldBe((int)HttpStatusCode.OK);
+            statusCodeResult.StatusCode.ShouldBe((int) HttpStatusCode.OK);
 
             var msg = logger.Logs[0];
             Assert.Contains("documents found", msg);
