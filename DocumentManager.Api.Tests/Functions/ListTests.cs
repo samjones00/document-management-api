@@ -43,7 +43,7 @@ namespace DocumentManager.Api.Tests.Functions
             var logger = new FakeLogger<AzureFunctions>();
             var mediator = new Mock<IMediator>();
             mediator
-                .Setup(m => m.Send(It.IsAny<GetDocumentsQuery>(), It.IsAny<CancellationToken>()))
+                .Setup(m => m.Send(It.IsAny<GetDocumentCollectionQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new ValueWrapper<List<Document>>(new List<Document>(), true));
 
             var function = new AzureFunctions(mediator.Object, validator, logger);

@@ -7,26 +7,26 @@ using DocumentManager.Core.Interfaces;
 
 namespace DocumentManager.Core.Queries
 {
-    public class GetBlobAsMemoryStream : IRequest<ValueWrapper<MemoryStream>>
+    public class GetBlobAsMemoryStreamQuery : IRequest<ValueWrapper<MemoryStream>>
     {
         public string Filename { get; }
 
-        public GetBlobAsMemoryStream(string filename)
+        public GetBlobAsMemoryStreamQuery(string filename)
         {
             Filename = filename;
         }
     }
 
-    public class GetBlobAsMemoryStreamHandler : IRequestHandler<GetBlobAsMemoryStream, ValueWrapper<MemoryStream>>
+    public class GetBlobAsMemoryStreamQueryHandler : IRequestHandler<GetBlobAsMemoryStreamQuery, ValueWrapper<MemoryStream>>
     {
         private readonly IStorageRepository _repository;
 
-        public GetBlobAsMemoryStreamHandler(IStorageRepository repository)
+        public GetBlobAsMemoryStreamQueryHandler(IStorageRepository repository)
         {
             _repository = repository;
         }
 
-        public async Task<ValueWrapper<MemoryStream>> Handle(GetBlobAsMemoryStream request, CancellationToken cancellationToken)
+        public async Task<ValueWrapper<MemoryStream>> Handle(GetBlobAsMemoryStreamQuery request, CancellationToken cancellationToken)
         {
             var response = await _repository.Get(request.Filename, cancellationToken);
 

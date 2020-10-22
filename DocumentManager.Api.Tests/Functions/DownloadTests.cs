@@ -41,7 +41,7 @@ namespace DocumentManager.Api.Tests.Functions
                     new Document(filename, bytes, "application/pdf", new DateTime(02, 03, 04, 05, 06, 07)), true));
 
             mediator
-                .Setup(m => m.Send(It.IsAny<GetBlobAsMemoryStream>(), It.IsAny<CancellationToken>()))
+                .Setup(m => m.Send(It.IsAny<GetBlobAsMemoryStreamQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new ValueWrapper<MemoryStream>(StreamHelper.CreateExampleStream(bytes), true));
 
             var function = new AzureFunctions(mediator.Object, validator, logger.Object);

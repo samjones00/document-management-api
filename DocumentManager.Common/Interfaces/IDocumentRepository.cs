@@ -10,7 +10,7 @@ namespace DocumentManager.Core.Interfaces
     public interface IDocumentRepository
     {
         Task<IEnumerable<Document>> Get(Expression<Func<Document, bool>> Query, string sortProperty, CancellationToken cancellationToken);
-        Task Delete(string filename, CancellationToken cancellationToken);
+        Task<bool> Delete(string filename, CancellationToken cancellationToken);
         Task Add(Document document, CancellationToken cancellationToken);
         Document Get(string filename);
     }

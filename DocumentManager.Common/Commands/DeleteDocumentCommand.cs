@@ -27,8 +27,9 @@ namespace DocumentManager.Core.Commands
 
         public async Task<ValueWrapper<bool>> Handle(DeleteDocumentCommand request, CancellationToken cancellationToken)
         {
-            await _repository.Delete(request.Filename, cancellationToken);
-            return new ValueWrapper<bool>(true);
+            var response = await _repository.Delete(request.Filename, cancellationToken);
+
+            return new ValueWrapper<bool>(response);
         }
     }
 }

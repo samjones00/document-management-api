@@ -1,14 +1,14 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using DocumentManager.Core.Commands;
 using DocumentManager.Core.Factories;
-using Moq;
-using Xunit;
-using Shouldly;
 using DocumentManager.Core.Interfaces;
-using System;
+using Moq;
+using Shouldly;
+using Xunit;
 
-namespace DocumentManager.Core.Tests.Queries
+namespace DocumentManager.Core.Tests.Commands
 {
     public class CreateDocumentCommandTests
     {

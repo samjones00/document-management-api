@@ -110,7 +110,7 @@ namespace DocumentManager.Api
         {
             try
             {
-                var documents = await _mediator.Send(new GetDocumentsQuery(sortProperty));
+                var documents = await _mediator.Send(new GetDocumentCollectionQuery(sortProperty));
 
                 if (!documents.IsSuccessful) return new InternalServerErrorResult();
 
@@ -138,7 +138,7 @@ namespace DocumentManager.Api
 
                 if (!document.IsSuccessful) return new NotFoundObjectResult("File not found.");
 
-                var blob = await _mediator.Send(new GetBlobAsMemoryStream(filename));
+                var blob = await _mediator.Send(new GetBlobAsMemoryStreamQuery(filename));
 
                 if (!blob.IsSuccessful) return new NotFoundResult();
 

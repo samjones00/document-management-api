@@ -127,15 +127,21 @@ namespace DocumentManager.Core.Repositories
             return document;
         }
 
-        public async Task Delete(string filename, CancellationToken cancellationToken)
+        public async Task<bool> Delete(string filename, CancellationToken cancellationToken)
         {
             var container = _client.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
             var queryDefinition = new QueryDefinition("select * from c");
             var queryResultSetIterator = container.GetItemQueryIterator<Document>(queryDefinition);
-            var currentResultSet = await queryResultSetIterator.ReadNextAsync();
+            var currentResultSet = await queryResultSetIterator.ReadNextAsync(cancellationToken);
             var doc = currentResultSet.FirstOrDefault(x => x.Filename == filename);
 
-            await container.DeleteItemAsync<Document>(doc.Id, new PartitionKey(doc.ContentType), null, cancellationToken);
+            if (doc != null)
+            {
+                await container.DeleteItemAsync<Document>(doc.Id, new PartitionKey(doc.ContentType), null, cancellationToken);
+                return true;
+            }
+
+            return false;
         }
 
         public async Task Add(Document document, CancellationToken cancellationToken)
