@@ -26,24 +26,62 @@ https://docs.microsoft.com/en-us/azure/cosmos-db/local-emulator-release-notes
 Once Cosmos emulator is running, it can be accessed from:
 https://localhost:8081/_explorer/index.html
 
+### Running the API
+To start the API you can either open the solution in Visual Studio and run the `DocumentManager.Api` project.
+
+Alternatively, if you have the Azure Functions Core Tools installed then you can open a terminal window and run `func start` from .\DocumentManager.Api
+
+You should see the following output
+```
+[01:34:30 INF] Initializing function HTTP routes
+Mapped function route 'api/delete/{filename}' [delete] to 'Delete'
+Mapped function route 'api/download/{filename}' [get] to 'Download'
+Mapped function route 'api/list/{sortProperty?}/{sortDirection?}' [get] to 'List'
+Mapped function route 'api/Upload' [post] to 'Upload'
+
+[01:34:30 INF] Host initialized (127ms)
+
+Functions:
+
+        Delete: [DELETE] http://localhost:7071/api/delete/{filename}
+
+        Download: [GET] http://localhost:7071/api/download/{filename}
+
+        List: [GET] http://localhost:7071/api/list/{sortProperty?}/{sortDirection?}
+
+        Upload: [POST] http://localhost:7071/api/Upload
+
+        CreateDocument: blobTrigger
+
+For detailed output, run func with --verbose flag.
+[01:34:30 INF] Host started (174ms)
+[01:34:30 INF] Job host started
+Hosting environment: Production
+Content root path: D:\Projects\Mine\document-management-api-example\DocumentManager.Api\bin\output
+Now listening on: http://0.0.0.0:7071
+Application started. Press Ctrl+C to shut down.
+```
+
 ## Endpoints
 
 | Method | Request type | Url |
 |--------|--------------|-----|
-| Upload | POST | /api/upload | 
-| List   | GET  | /api/list/{sort property}/{sort direction}| 
-| Download   | GET  | /api/download/{filename}|
-| Delete   | DELETE  | /api/delete/{filename}| 
+| Upload | POST | http://localhost:7071/api/upload | 
+| List   | GET  | http://localhost:7071/api/list/{sort property}/{sort direction}| 
+| Download   | GET  | http://localhost:7071/api/download/{filename}|
+| Delete   | DELETE  | http://localhost:7071/api/delete/{filename}| 
 -----------------
 
 ### Upload
 `POST /api/upload`
 ```json
 {
-    "filename":"example13.pdf",
-    "data":"JVBERi0xL..."
+    "filename": "example.pdf",
+    "data": "JVBERi0xLj..."
 }
 ```
+The data property should be filled with the base64 encoded file data, there are sites to help with this step such as https://www.browserling.com/tools/file-to-base64
+
 #### Statuses
 201 Created, 400 Bad Request, 500 Internal Server error
 
