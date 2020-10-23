@@ -10,8 +10,8 @@
 
         public static class Cosmos
         {
-            public const string ContainerName = "Uploads";
-            public const string DatabaseName = "UploadManager";
+            public const string ContainerName = "uploads";
+            public const string DatabaseName = "document-manager";
             public const string ConnectionStringName = "CosmosConnectionString";
         }
 

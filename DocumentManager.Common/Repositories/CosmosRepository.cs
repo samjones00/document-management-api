@@ -69,13 +69,12 @@ namespace DocumentManager.Core.Repositories
             var currentResultSet = await queryResultSetIterator.ReadNextAsync(cancellationToken);
             var doc = currentResultSet.FirstOrDefault(x => x.Filename == filename);
 
-            if (doc != null)
-            {
-                await container.DeleteItemAsync<Document>(doc.Id, new PartitionKey(doc.ContentType), null, cancellationToken);
-                return true;
-            }
+            if (doc == null) 
+                return false;
 
-            return false;
+            await container.DeleteItemAsync<Document>(doc.Id, new PartitionKey(doc.ContentType), null, cancellationToken);
+
+            return true;
         }
 
         public async Task Add(Document document, CancellationToken cancellationToken)
