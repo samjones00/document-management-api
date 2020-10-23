@@ -2,7 +2,12 @@
 
 ![CI Pipeline](https://github.com/samjones00/document-management-api-example/workflows/.NET%20Core/badge.svg)
 
+![Diagram](https://github.com/samjones00/document-management-api-example/blob/main/Documentation/Diagram.jpeg?raw=true "Diagram")
 https://lucid.app/documents/view/80b791ef-6597-4280-adef-fe815bbe0f2c
+
+The API is writen using Azure Functions V3, I chose to do it this way as it hands over the responsibility of scaling and availability to Azure while lowering running costs. I'm adding a document to Cosmos DB for each document and the files themselves are saved to Azure blob storage.
+
+I realise that I could have used Azure Storage Tables for the documents, or just listed the documents from blob storage directly but I wanted to use a more "real world" approach.
 
  ## Requirements
 * Docker
