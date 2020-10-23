@@ -107,7 +107,7 @@ The data property should be filled with the base64 encoded file data, there are 
 Available properties: DateCreated, Filename, ContentType, Bytes
 Available sort directions: Ascending, Descending
 
-A list of documents will be listed from Cosmos, `property` and `sortDirection` are optional and will order by DateCreated Ascending by deault.
+A list of documents will be listed from Cosmos, `property` and `sortDirection` are optional and will order by DateCreated Ascending by default.
 
 Example response:
 ```json
