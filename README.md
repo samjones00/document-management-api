@@ -107,7 +107,7 @@ The data property should be filled with the base64 encoded file data, there are 
 ### List
 `GET /api/list` \
 `GET /api/list/{property}` \
-`GET /api/list/{property}/{sortDirection}` \
+`GET /api/list/{property}/{sortDirection}`
 
 #### Statuses
 200 Success, 500 Internal Server error
