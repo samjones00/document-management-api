@@ -106,16 +106,16 @@ The data property should be filled with the base64 encoded file data, there are 
 
 ### List
 `GET /api/list` \
-`GET /api/list/{property}` \
-`GET /api/list/{property}/{sortDirection}`
+`GET /api/list/{sortProperty}` \
+`GET /api/list/{sortProperty}/{sortDirection}`
 
 #### Statuses
 200 Success, 500 Internal Server error
 
-Available properties: `DateCreated`, `Filename`, `ContentType`, `Bytes` \
+Available sort properties: `DateCreated`, `Filename`, `ContentType`, `Bytes` \
 Available sort directions: `Ascending`, `Descending`
 
-A list of documents will be listed from Cosmos, `property` and `sortDirection` are optional and will order by DateCreated Ascending by default.
+A list of documents will be listed from Cosmos, `sortProperty` and `sortDirection` are optional and will order by `DateCreated` `Ascending` by default.
 
 Example response:
 ```json
