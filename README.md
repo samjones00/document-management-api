@@ -19,6 +19,8 @@ I realise that I could have used Azure Storage Tables for the documents, or just
 **Cosmos DB** \
 Copy the primary connection string from your local cosmos emulator https://localhost:8081/_explorer/index.html into the setting CosmosConnectionString in [local.settings.json](./DocumentManager.Api/local.settings.json)
 
+:information_source: The database and collection will be created automatically.
+
 ### Running the API
 If you have the Azure Functions Core Tools installed then you can open a terminal window and run `func start` from .\DocumentManager.Api, alternatively you can open the solution in Visual Studio and run the `DocumentManager.Api` project.
 
