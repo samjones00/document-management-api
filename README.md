@@ -78,11 +78,19 @@ Application started. Press Ctrl+C to shut down.
 -----------------
 
 ### Upload
-`POST /api/upload`
+`POST /api/upload` \
+Example request:
 ```json
 {
     "filename": "example.pdf",
     "data": "JVBERi0xLj..."
+}
+```
+Example response:
+```json
+{
+    "filename": "example.pdf",
+    "size": 13264
 }
 ```
 The data property should be filled with the base64 encoded file data, there are sites to help with this step such as https://www.browserling.com/tools/file-to-base64
@@ -97,9 +105,9 @@ The data property should be filled with the base64 encoded file data, there are 
 -------------
 
 ### List
-`GET /api/list`
-`GET /api/list/{property}`
-`GET /api/list/{property}/{sortDirection}`
+`GET /api/list` \
+`GET /api/list/{property}` \
+`GET /api/list/{property}/{sortDirection}` \
 
 #### Statuses
 200 Success, 500 Internal Server error
@@ -111,9 +119,22 @@ A list of documents will be listed from Cosmos, `property` and `sortDirection` a
 
 Example response:
 ```json
-{
-EXAMPLE HERE
-}
+[
+    {
+        "id": "b584d8e5-07d7-431d-a407-12ad92af1fcb",
+        "filename": "example.pdf",
+        "dateCreated": "2020-10-24T19:09:37.4478874Z",
+        "bytes": 13264,
+        "contentType": "application/pdf"
+    },
+    {
+        "id": "b584d8e5-07d7-431d-a407-12ad92af1fcb",
+        "filename": "example2.pdf",
+        "dateCreated": "2020-10-24T19:09:37.4478874Z",
+        "bytes": 253264,
+        "contentType": "application/pdf"
+    }
+]
 ```
 ---------------
 
