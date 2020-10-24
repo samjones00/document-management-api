@@ -7,18 +7,17 @@ https://lucid.app/documents/view/80b791ef-6597-4280-adef-fe815bbe0f2c
 
 The API is writen using Azure Functions V3, I chose to do it this way as it hands over the responsibility of scaling and availability to Azure while lowering running costs. I'm adding a document to Cosmos DB for each document and the files themselves are saved to Azure blob storage.
 
-I realise that I could have used Azure Storage Tables for the documents, or just listed the documents from blob storage directly but I wanted to use a more "real world" approach.
+I realise that I could have used Azure Storage Tables for the documents, or just listed the documents from blob storage directly but I wanted to use multiple services working with each other.
 
- ## Requirements
-* Docker
+## Requirements
 * Azure Functions Core Tools (Optional) - [Work with Azure Functions Core Tools](https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local)
 * Dot net core 3.1
 * Azure Storage Emulator - [Use the Azure Storage Emulator for development and testing](https://docs.microsoft.com/en-us/azure/storage/common/storage-use-emulator)
 * Cosmos Emulator - [Install and use the Azure Cosmos emulator for local development and testing](https://docs.microsoft.com/en-us/azure/cosmos-db/local-emulator)
 
 ### Setting up
-Cosmos DB
-Copy the primary connection string from your local cosmos emulator https://localhost:8081/_explorer/index.html into the settting CosmosConnectionString in [local.settings.json](./DocumentManager.Api/local.settings.json)
+**Cosmos DB** \
+Copy the primary connection string from your local cosmos emulator https://localhost:8081/_explorer/index.html into the setting CosmosConnectionString in [local.settings.json](./DocumentManager.Api/local.settings.json)
 
 ### Running the API
 If you have the Azure Functions Core Tools installed then you can open a terminal window and run `func start` from .\DocumentManager.Api, alternatively you can open the solution in Visual Studio and run the `DocumentManager.Api` project.
