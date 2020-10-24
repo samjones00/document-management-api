@@ -11,32 +11,19 @@ I realise that I could have used Azure Storage Tables for the documents, or just
 
  ## Requirements
 * Docker
-* Azure Functions Core Tools (Optional) https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local?tabs=windows%2Ccsharp%2Cbash
+* Azure Functions Core Tools (Optional) - [Work with Azure Functions Core Tools](https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local)
 * Dot net core 3.1
+* Azure Storage Emulator - [Use the Azure Storage Emulator for development and testing](https://docs.microsoft.com/en-us/azure/storage/common/storage-use-emulator)
+* Cosmos Emulator - [Install and use the Azure Cosmos emulator for local development and testing](https://docs.microsoft.com/en-us/azure/cosmos-db/local-emulator)
 
 ### Setting up
-
-#### Azure Storage Emulator  (requires 1.5gb disk space)
-Run ```docker run -p 10000:10000 -p 10001:10001 -p 10002:10002 microsoft/azure-storage-emulator```
-
-#### Azure Cosmos Emulator
-Azure Cosmos Emulator in Docker container (requires 10gb disk space)
-Run `docker-compose up` from `.\`
-
-Or 
-
-download the Cosmos Emulator application:
-https://docs.microsoft.com/en-us/azure/cosmos-db/local-emulator-release-notes
-
-Once Cosmos emulator is running, it can be accessed from:
-https://localhost:8081/_explorer/index.html
+Cosmos DB
+Copy the primary connection string from your local cosmos emulator https://localhost:8081/_explorer/index.html into the settting CosmosConnectionString in [local.settings.json](./DocumentManager.Api/local.settings.json)
 
 ### Running the API
-To start the API you can either open the solution in Visual Studio and run the `DocumentManager.Api` project.
+If you have the Azure Functions Core Tools installed then you can open a terminal window and run `func start` from .\DocumentManager.Api, alternatively you can open the solution in Visual Studio and run the `DocumentManager.Api` project.
 
-Alternatively, if you have the Azure Functions Core Tools installed then you can open a terminal window and run `func start` from .\DocumentManager.Api
-
-You should see the following output
+You should see the following output if using Azure Functions Core Tools:
 ```
 [01:34:30 INF] Initializing function HTTP routes
 Mapped function route 'api/delete/{filename}' [delete] to 'Delete'
