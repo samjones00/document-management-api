@@ -1,9 +1,5 @@
 {
   "IsEncrypted": false,
-  //"Values": {
-  //  "CosmosDatabaseName": "document-manager",
-  //  "CosmosContainerName": "Uploads"
-  //},
   "Validator": {
     "MaximumFileSizeInBytes": "5242880",
     "AllowedContentTypes": [

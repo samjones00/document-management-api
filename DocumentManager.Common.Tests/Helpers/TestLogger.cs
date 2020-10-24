@@ -4,11 +4,11 @@ using System.Collections.Generic;
 
 namespace DocumentManager.Core.Tests.Helpers
 {
-    public class FakeLogger<T> : ILogger<T>
+    public class TestLogger<T> : ILogger<T>
     {
         public IList<string> Logs;
 
-        public FakeLogger()
+        public TestLogger()
         {
             this.Logs = new List<string>();
         }

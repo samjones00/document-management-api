@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net.Http;
 using System.Reflection;
 using Azure.Storage.Blobs;
 using DocumentManager.Api;
@@ -50,45 +49,24 @@ namespace DocumentManager.Api
 
         private void ConfigureCosmosClient(IFunctionsHostBuilder builder, IConfiguration configuration)
         {
-            CosmosClientOptions cosmosClientOptions = new CosmosClientOptions()
-            {
-                HttpClientFactory = () =>
-                {
-                    HttpMessageHandler httpMessageHandler = new HttpClientHandler()
-                    {
-                        ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-                    };
+            var client = new CosmosClient(configuration.GetConnectionString(Constants.Cosmos.ConnectionStringName));
 
-                    return new HttpClient(httpMessageHandler);
-                },
-                ConnectionMode = ConnectionMode.Gateway
-            };
-
-            var cosmosClient =
-                new CosmosClient(configuration.GetConnectionString(Constants.Cosmos.ConnectionStringName),
-                    cosmosClientOptions);
-
-            _ = new SetupCosmos(cosmosClient).Setup();
-
-            builder.Services.AddSingleton(_ => cosmosClient);
+            builder.Services.AddSingleton(_ => client);
+            _ = new SetupCosmos(client).Setup();
         }
 
         private void ConfigureBlobClient(IFunctionsHostBuilder builder, IConfiguration configuration)
         {
-            static string GenerateConnStr(string ip = "127.0.0.1", int blobport = 10000, int queueport = 10001, int tableport = 10002)
-            {
-                return $"DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://{ip}:{blobport}/devstoreaccount1;TableEndpoint=http://{ip}:{tableport}/devstoreaccount1;QueueEndpoint=http://{ip}:{queueport}/devstoreaccount1;";
-            }
-
             builder.Services.AddSingleton(_ =>
-                new BlobContainerClient(GenerateConnStr(), Constants.Storage.ContainerName));
+                new BlobContainerClient(configuration.GetValue<string>(Constants.Storage.ConnectionStringName),
+                    Constants.Storage.ContainerName));
         }
 
         private void ConfigureLogging(IFunctionsHostBuilder builder)
         {
             var logger = new LoggerConfiguration()
                 .WriteTo.Console()
-                .WriteTo.File(@"Logs\log.txt", rollingInterval: RollingInterval.Day)
+                .WriteTo.File(@"..\..\..\Logs\log.txt", rollingInterval: RollingInterval.Day)
                 .CreateLogger();
 
             builder.Services.AddLogging(lb => lb.AddSerilog(logger));

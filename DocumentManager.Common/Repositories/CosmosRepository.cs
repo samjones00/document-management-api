@@ -20,7 +20,8 @@ namespace DocumentManager.Core.Repositories
             _client = client;
         }
 
-        public IEnumerable<Document> GetCollection(string sortProperty, string sortDirection, CancellationToken cancellationToken)
+        public IEnumerable<Document> GetCollection(string sortProperty, string sortDirection,
+            CancellationToken cancellationToken)
         {
             var container = _client.GetContainer(Constants.Cosmos.DatabaseName, Constants.Cosmos.ContainerName);
 
@@ -43,7 +44,7 @@ namespace DocumentManager.Core.Repositories
             }
 
             var results = container.GetItemLinqQueryable<Document>(true)
-                .OrderByWithDirection(sortQuery,!isAscending)
+                .OrderByWithDirection(sortQuery, !isAscending)
                 .AsEnumerable();
 
             return results;

@@ -24,7 +24,7 @@ namespace DocumentManager.Api.Tests.Functions
             ConfigurationHelper.SetupMaximumFileSizeInBytes(configuration, Constants.MaximumFileSizeInBytes);
             ConfigurationHelper.SetupAllowedContentTypes(configuration, "application/pdf");
             var validator = new UploadRequestValidator(configuration.Object);
-            var logger = new FakeLogger<AzureFunctions>();
+            var logger = new TestLogger<AzureFunctions>();
 
             var mediator = new Mock<IMediator>();
             mediator

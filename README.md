@@ -130,7 +130,7 @@ Example response:
 #### Statuses
 200 Success, 404 Not found, 500 Internal Server error
 
-Example response:
+Response:
 A memory stream will be returned, if you use postman there is the option to save the response as a file.
 
 ------------
@@ -140,3 +140,8 @@ A memory stream will be returned, if you use postman there is the option to save
 
 #### Statuses
 200 Success, 404 Not found, 500 Internal Server error
+
+---------------
+
+## Logging
+Logs are saved to text files in .\Logs

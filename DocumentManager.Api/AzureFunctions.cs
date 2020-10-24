@@ -94,6 +94,7 @@ namespace DocumentManager.Api
                 if(request.IsSuccessful)
                 {
                     _logger.LogDebug($"Document created for {filename}");
+                    return;
                 }
 
                 _logger.LogError($"Unable to create document for {filename}");
