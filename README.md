@@ -1,5 +1,13 @@
 # Document Management API
 
+---
+**NOTE**
+
+This a proof of concept, and overly complicated for a real world system
+
+---
+
+
 ![CI Pipeline](https://github.com/samjones00/document-management-api-example/workflows/.NET%20Core/badge.svg)
 
 ![Diagram](https://github.com/samjones00/document-management-api-example/blob/main/Documentation/Diagram.jpeg?raw=true "Diagram")
