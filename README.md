@@ -1,6 +1,5 @@
 # Document Management API
 
----
 :information_source: **NOTE**
 
 This a proof of concept, and overly complicated for a real world system
