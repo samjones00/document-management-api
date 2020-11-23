@@ -7,6 +7,8 @@ This a proof of concept, and overly complicated for a real world system
 
 ---
 
+<p class="callout info">A success message</p>
+
 
 ![CI Pipeline](https://github.com/samjones00/document-management-api-example/workflows/.NET%20Core/badge.svg)
 
